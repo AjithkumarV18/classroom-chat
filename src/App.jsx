@@ -1,9 +1,11 @@
-import ClassroomChat from "./ClassroomChat";
+//import ClassroomChat from "./ClassroomChat";
+import Login from "./pages/Login";
 
 function App() {
   return (
     <div>
-      <ClassroomChat />
+      {/* <ClassroomChat /> */}
+      <Login />
     </div>
   );
 }
