@@ -1,5 +1,6 @@
 import React from "react";
 import "./Login.css";
+import { Link } from "react-router-dom";
 
 const features = [
   {
@@ -101,7 +102,7 @@ function Login() {
           </button>
 
           <p className="login-register">
-            Don&apos;t have an account? <a href="/register">Register</a>
+            Don&apos;t have an account? <a href="/Register">Register</a>
           </p>
         </form>
       </section>
