@@ -94,7 +94,7 @@ function Login() {
               <input id="remember" name="remember" type="checkbox" />
               <span>Remember Me</span>
             </label>
-            <a href="/forgot-password">Forgot Password?</a>
+            <Link to="/forgot-password">Forgot Password?</Link>
           </div>
 
           <button className="login-button" type="submit">
