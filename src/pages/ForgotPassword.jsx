@@ -97,7 +97,7 @@ function ForgotPassword() {
         </form>
 
         <p className="forgot-card__footer">
-          Already have a code? <a href="/reset-password">Reset Password</a>
+          Already have a code? <Link to="/reset-password">Reset Password</Link>
         </p>
       </section>
     </main>
