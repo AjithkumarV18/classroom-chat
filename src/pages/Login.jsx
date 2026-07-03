@@ -1,6 +1,6 @@
 import React from "react";
 import "./Login.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const features = [
   {
@@ -18,6 +18,13 @@ const features = [
 ];
 
 function Login() {
+  const navigate = useNavigate();
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    navigate("/classroom");
+  };
+
   return (
     <main className="login-page">
       <section className="login-hero" aria-label="AI Education overview">
@@ -61,7 +68,7 @@ function Login() {
       </section>
 
       <section className="login-panel" aria-label="Login form">
-        <form className="login-card">
+        <form className="login-card" onSubmit={handleSubmit}>
           <div className="login-card__header">
             <h2>Welcome Back</h2>
             <p>Sign in to continue your AI learning journey.</p>
@@ -102,7 +109,7 @@ function Login() {
           </button>
 
           <p className="login-register">
-            Don&apos;t have an account? <a href="/Register">Register</a>
+            Don&apos;t have an account? <Link to="/register">Register</Link>
           </p>
         </form>
       </section>

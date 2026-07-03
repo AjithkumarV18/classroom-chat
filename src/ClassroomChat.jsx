@@ -35,10 +35,10 @@ export default function ClassroomChat() {
   return (
     <div style={styles.page}>
       <div style={styles.chatShell}>
-        <h2 style={styles.heading}>💬 Classroom Chat</h2>
+        <h2 style={styles.heading}>Classroom Chat</h2>
 
         <div style={styles.statusBar}>
-          <span>🟢 Trainer Online</span>
+          <span>Trainer Online</span>
           <span>Total Messages: {messages.length}</span>
         </div>
 
@@ -48,20 +48,9 @@ export default function ClassroomChat() {
               key={index}
               style={{
                 ...styles.messageBubble,
-                alignSelf:
-                  message.sender === "You"
-                    ? "flex-end"
-                    : "flex-start",
-
-                backgroundColor:
-                  message.sender === "You"
-                    ? "#2563eb"
-                    : "#ffffff",
-
-                color:
-                  message.sender === "You"
-                    ? "#ffffff"
-                    : "#000000",
+                alignSelf: message.sender === "You" ? "flex-end" : "flex-start",
+                backgroundColor: message.sender === "You" ? "#2563eb" : "#ffffff",
+                color: message.sender === "You" ? "#ffffff" : "#17202a",
               }}
             >
               <strong>{message.sender}</strong>
@@ -80,12 +69,8 @@ export default function ClassroomChat() {
             style={styles.input}
           />
 
-          <button
-            type="button"
-            onClick={sendMessage}
-            style={styles.button}
-          >
-            ➤ Send
+          <button type="button" onClick={sendMessage} style={styles.button}>
+            Send
           </button>
         </div>
       </div>
@@ -95,83 +80,94 @@ export default function ClassroomChat() {
 
 const styles = {
   page: {
-    minHeight: "100vh",
+    height: "100%",
+    minHeight: 0,
     display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background:
-      "linear-gradient(135deg, #dbeafe, #eff6ff)",
-    padding: "20px",
+    background: "transparent",
+    padding: 0,
   },
 
   chatShell: {
     width: "100%",
-    maxWidth: "650px",
+    height: "100%",
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
     backgroundColor: "#ffffff",
-    borderRadius: "20px",
-    padding: "20px",
-    boxShadow: "0 15px 35px rgba(0,0,0,0.15)",
+    borderRadius: "8px",
+    padding: "18px",
   },
 
   heading: {
-    textAlign: "center",
-    marginBottom: "15px",
+    flex: "0 0 auto",
+    textAlign: "left",
+    margin: "0 0 14px",
     color: "#1e40af",
+    fontSize: "1.35rem",
+    lineHeight: 1.2,
   },
 
   statusBar: {
+    flex: "0 0 auto",
     display: "flex",
     justifyContent: "space-between",
-    marginBottom: "15px",
+    gap: "10px",
+    marginBottom: "14px",
     padding: "10px",
     backgroundColor: "#f8fafc",
-    borderRadius: "10px",
+    borderRadius: "8px",
     fontWeight: "bold",
     color: "#475569",
+    fontSize: "0.86rem",
   },
 
   messageFeed: {
-    height: "350px",
+    flex: "1 1 auto",
+    minHeight: 0,
     overflowY: "auto",
     display: "flex",
     flexDirection: "column",
     gap: "10px",
-    padding: "15px",
+    padding: "12px",
     backgroundColor: "#f1f5f9",
-    borderRadius: "12px",
+    borderRadius: "8px",
     border: "1px solid #e2e8f0",
   },
 
   messageBubble: {
-    maxWidth: "75%",
-    padding: "12px 15px",
-    borderRadius: "16px",
+    maxWidth: "82%",
+    padding: "11px 13px",
+    borderRadius: "8px",
     boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-    wordWrap: "break-word",
+    wordBreak: "break-word",
+    lineHeight: 1.4,
   },
 
   controls: {
+    flex: "0 0 auto",
     display: "flex",
-    gap: "10px",
-    marginTop: "15px",
+    gap: "8px",
+    marginTop: "14px",
   },
 
   input: {
+    minWidth: 0,
     flex: 1,
-    padding: "12px",
-    borderRadius: "10px",
+    padding: "11px",
+    borderRadius: "8px",
     border: "1px solid #cbd5e1",
-    fontSize: "16px",
+    fontSize: "0.95rem",
     outline: "none",
   },
 
   button: {
-    padding: "12px 20px",
+    flex: "0 0 auto",
+    padding: "0 14px",
     border: "none",
-    borderRadius: "10px",
+    borderRadius: "8px",
     backgroundColor: "#2563eb",
     color: "#ffffff",
-    fontSize: "16px",
+    fontSize: "0.95rem",
     fontWeight: "bold",
     cursor: "pointer",
   },
