@@ -4,6 +4,7 @@ import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import DigitalClassroom from "./pages/DigitalClassroom";
+import TrainerDashboard from "./pages/TrainerDashboard";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/trainer-dashboard" element={<TrainerDashboard />} />
       <Route path="/classroom" element={<DigitalClassroom />} />
     </Routes>
   );
