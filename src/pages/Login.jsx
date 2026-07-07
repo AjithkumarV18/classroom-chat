@@ -22,7 +22,7 @@ function Login() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    navigate("/trainer-dashboard");
+    navigate("/dashboard");
   };
 
   return (
@@ -118,4 +118,5 @@ function Login() {
 }
 
 export default Login;
+
 
