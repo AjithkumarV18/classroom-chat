@@ -289,3 +289,13 @@ body {
     padding-right: 16px;
   }
 }
+
+.dashboard-error {
+  margin: 0 0 18px;
+  border: 1px solid rgba(199, 61, 74, 0.28);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(199, 61, 74, 0.08);
+  color: #c73d4a;
+  font-weight: 800;
+}

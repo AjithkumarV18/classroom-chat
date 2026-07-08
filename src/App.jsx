@@ -6,6 +6,7 @@ import ResetPassword from "./pages/ResetPassword";
 import DigitalClassroom from "./pages/DigitalClassroom";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import RecordingDashboard from "./pages/RecordingDashboard";
+import SessionRecordings from "./pages/SessionRecordings";
 import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
       <Route path="/dashboard" element={<AdminDashboard />} />
       <Route path="/trainer-dashboard" element={<TrainerDashboard />} />
       <Route path="/recordings" element={<RecordingDashboard />} />
+      <Route path="/session-recordings" element={<SessionRecordings />} />
       <Route path="/classroom" element={<DigitalClassroom />} />
     </Routes>
   );

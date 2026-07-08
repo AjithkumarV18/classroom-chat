@@ -1,29 +1,19 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import CreateSessionModal from "../components/trainer/CreateSessionModal";
+import { trainerSessionsApi } from "../services/api";
 import "./TrainerDashboard.css";
-
-const initialSessions = [
-  {
-    id: "ROOM-AI2048",
-    batchName: "AI Foundations - Batch A",
-    sessionDate: "2026-07-07",
-    sessionTime: "10:30",
-    studentsNotified: false,
-  },
-  {
-    id: "ROOM-ML7312",
-    batchName: "Machine Learning - Batch B",
-    sessionDate: "2026-07-08",
-    sessionTime: "15:00",
-    studentsNotified: false,
-  },
-];
 
 function TrainerDashboard() {
   const navigate = useNavigate();
-  const [sessions, setSessions] = useState(initialSessions);
+  const [sessions, setSessions] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    loadSessions();
+  }, []);
 
   const sortedSessions = useMemo(() => {
     return [...sessions].sort((firstSession, secondSession) => {
@@ -33,21 +23,60 @@ function TrainerDashboard() {
     });
   }, [sessions]);
 
-  const handleCreateSession = (session) => {
-    setSessions((currentSessions) => [session, ...currentSessions]);
-    setIsCreateModalOpen(false);
+  const loadSessions = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+      const response = await trainerSessionsApi.list();
+      setSessions(response.map(mapTrainerSessionFromApi));
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to load trainer sessions.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleNotifyStudents = (sessionId) => {
+  const handleCreateSession = async (session) => {
+    try {
+      setErrorMessage("");
+      const createdSession = await trainerSessionsApi.create({
+        room_id: session.id,
+        batch_name: session.batchName,
+        scheduled_date: session.sessionDate,
+        scheduled_time: session.sessionTime,
+        students_notified: false,
+      });
+
+      setSessions((currentSessions) => [
+        mapTrainerSessionFromApi(createdSession),
+        ...currentSessions,
+      ]);
+      setIsCreateModalOpen(false);
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to create trainer session.");
+    }
+  };
+
+  const handleNotifyStudents = async (sessionId) => {
     const session = sessions.find((item) => item.id === sessionId);
+    if (!session) return;
 
-    setSessions((currentSessions) =>
-      currentSessions.map((item) =>
-        item.id === sessionId ? { ...item, studentsNotified: true } : item
-      )
-    );
+    try {
+      setErrorMessage("");
+      const updatedSession = await trainerSessionsApi.update(session.objectId, {
+        students_notified: true,
+      });
 
-    alert(`Students notified for ${session?.batchName || "this session"}.`);
+      setSessions((currentSessions) =>
+        currentSessions.map((item) =>
+          item.id === sessionId ? mapTrainerSessionFromApi(updatedSession) : item
+        )
+      );
+
+      alert(`Students notified for ${session.batchName}.`);
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to notify students.");
+    }
   };
 
   const handleStartSession = (sessionId) => {
@@ -71,6 +100,8 @@ function TrainerDashboard() {
             + Create Live Session
           </button>
         </header>
+
+        {errorMessage ? <p className="dashboard-error">{errorMessage}</p> : null}
 
         <section className="dashboard-summary" aria-label="Session summary">
           <article>
@@ -96,9 +127,14 @@ function TrainerDashboard() {
           </div>
 
           <div className="sessions-list">
-            {sortedSessions.length > 0 ? (
+            {isLoading ? (
+              <div className="sessions-empty">
+                <h3>Loading sessions</h3>
+                <p>Please wait while data loads from MongoDB.</p>
+              </div>
+            ) : sortedSessions.length > 0 ? (
               sortedSessions.map((session) => (
-                <article className="session-card" key={session.id}>
+                <article className="session-card" key={session.objectId}>
                   <div className="session-card__content">
                     <span className="session-card__eyebrow">Room ID</span>
                     <h3>{session.id}</h3>
@@ -139,7 +175,7 @@ function TrainerDashboard() {
             ) : (
               <div className="sessions-empty">
                 <h3>No live sessions scheduled</h3>
-                <p>Create a live session to add it to the trainer dashboard.</p>
+                <p>Create a live session to save it in MongoDB.</p>
               </div>
             )}
           </div>
@@ -153,6 +189,17 @@ function TrainerDashboard() {
       />
     </main>
   );
+}
+
+function mapTrainerSessionFromApi(session) {
+  return {
+    objectId: session.id,
+    id: session.room_id,
+    batchName: session.batch_name,
+    sessionDate: session.scheduled_date,
+    sessionTime: session.scheduled_time,
+    studentsNotified: session.students_notified,
+  };
 }
 
 function formatSessionDateTime(sessionDate, sessionTime) {

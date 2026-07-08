@@ -1,29 +1,17 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import UploadRecordingModal from "../components/recordings/UploadRecordingModal";
+import { recordingsApi, sessionRecordingsApi, toApiUrl } from "../services/api";
 import "./RecordingDashboard.css";
 
-const initialRecordings = [
-  {
-    id: "REC-AI1024",
-    sessionName: "ROOM-AI2048 - AI Foundations",
-    title: "Introduction to AI Concepts",
-    videoFileName: "ai-foundations-intro.mp4",
-    duration: "42 min",
-    uploadedAt: "2026-07-06T09:30:00.000Z",
-  },
-  {
-    id: "REC-ML5481",
-    sessionName: "ROOM-ML7312 - Machine Learning",
-    title: "Model Training Walkthrough",
-    videoFileName: "model-training.mp4",
-    duration: "58 min",
-    uploadedAt: "2026-07-06T13:00:00.000Z",
-  },
-];
-
 function RecordingDashboard() {
-  const [recordings, setRecordings] = useState(initialRecordings);
+  const [recordings, setRecordings] = useState([]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    loadRecordings();
+  }, []);
 
   const sortedRecordings = useMemo(() => {
     return [...recordings].sort(
@@ -32,9 +20,47 @@ function RecordingDashboard() {
     );
   }, [recordings]);
 
-  const handleUploadRecording = (recording) => {
-    setRecordings((currentRecordings) => [recording, ...currentRecordings]);
-    setIsUploadModalOpen(false);
+  const loadRecordings = async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+      const response = await recordingsApi.list();
+      setRecordings(response.map(mapRecordingFromApi));
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to load recordings.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUploadRecording = async (recording) => {
+    try {
+      setErrorMessage("");
+      const createdRecording = await recordingsApi.upload({
+        recordingId: recording.id,
+        sessionName: recording.sessionName,
+        title: recording.title,
+        duration: recording.duration,
+        videoFile: recording.videoFile,
+      });
+
+      await sessionRecordingsApi.create({
+        recording_id: createdRecording.recording_id,
+        session_name: createdRecording.session_name,
+        duration: createdRecording.duration,
+        video_url: createdRecording.video_url,
+        download_url: createdRecording.download_url,
+        video_file_name: createdRecording.video_file_name,
+      });
+
+      setRecordings((currentRecordings) => [
+        mapRecordingFromApi(createdRecording),
+        ...currentRecordings,
+      ]);
+      setIsUploadModalOpen(false);
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to upload recording.");
+    }
   };
 
   return (
@@ -55,6 +81,8 @@ function RecordingDashboard() {
           </button>
         </header>
 
+        {errorMessage ? <p className="recording-error">{errorMessage}</p> : null}
+
         <section className="recording-summary" aria-label="Recording summary">
           <article>
             <span>Total Recordings</span>
@@ -70,14 +98,19 @@ function RecordingDashboard() {
           <div className="recordings-panel__titlebar">
             <div>
               <h2 id="recordings-title">All Recorded Sessions</h2>
-              <p>Each recording shows the mock recording ID, session, video file, and duration.</p>
+              <p>Each recording is loaded from MongoDB through the backend.</p>
             </div>
           </div>
 
           <div className="recordings-list">
-            {sortedRecordings.length > 0 ? (
+            {isLoading ? (
+              <div className="recordings-empty">
+                <h3>Loading recordings</h3>
+                <p>Please wait while data loads from MongoDB.</p>
+              </div>
+            ) : sortedRecordings.length > 0 ? (
               sortedRecordings.map((recording) => (
-                <article className="recording-card" key={recording.id}>
+                <article className="recording-card" key={recording.objectId}>
                   <div className="recording-card__content">
                     <span className="recording-card__eyebrow">Recording ID</span>
                     <h3>{recording.id}</h3>
@@ -103,13 +136,16 @@ function RecordingDashboard() {
                   <div className="recording-card__meta">
                     <span>Uploaded</span>
                     <strong>{formatUploadDateTime(recording.uploadedAt)}</strong>
+                    {recording.downloadUrl ? (
+                      <a href={toApiUrl(recording.downloadUrl)}>Download</a>
+                    ) : null}
                   </div>
                 </article>
               ))
             ) : (
               <div className="recordings-empty">
                 <h3>No recordings uploaded</h3>
-                <p>Use the upload button to add the first recorded session.</p>
+                <p>Use the upload button to save the first recording in MongoDB.</p>
               </div>
             )}
           </div>
@@ -123,6 +159,20 @@ function RecordingDashboard() {
       />
     </main>
   );
+}
+
+function mapRecordingFromApi(recording) {
+  return {
+    objectId: recording.id,
+    id: recording.recording_id,
+    sessionName: recording.session_name,
+    title: recording.title,
+    videoFileName: recording.video_file_name,
+    duration: recording.duration,
+    videoUrl: recording.video_url,
+    downloadUrl: recording.download_url,
+    uploadedAt: recording.uploaded_at,
+  };
 }
 
 function formatUploadDate(uploadedAt) {

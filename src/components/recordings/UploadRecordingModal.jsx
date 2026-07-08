@@ -84,6 +84,7 @@ function UploadRecordingModal({ isOpen, onClose, onUploadRecording }) {
       sessionName: formValues.sessionName,
       title: formValues.recordingTitle.trim(),
       videoFileName: formValues.videoFile.name,
+      videoFile: formValues.videoFile,
       duration: formValues.duration.trim(),
       uploadedAt: new Date().toISOString(),
     });

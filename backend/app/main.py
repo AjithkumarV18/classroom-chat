@@ -1,9 +1,15 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import create_indexes
 from app.routes.auth import router as auth_router
+from app.routes.recordings import router as recordings_router
+from app.routes.session_recordings import router as session_recordings_router
+from app.routes.trainer_sessions import router as trainer_sessions_router
 
 app = FastAPI(title="Classroom Chat API", version="1.0.0")
 
@@ -14,6 +20,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+uploads_dir = Path(__file__).resolve().parents[1] / "uploads"
+uploads_dir.mkdir(exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
 @app.on_event("startup")
@@ -27,3 +37,6 @@ async def health_check() -> dict[str, str]:
 
 
 app.include_router(auth_router, prefix="/api")
+app.include_router(trainer_sessions_router, prefix="/api")
+app.include_router(recordings_router, prefix="/api")
+app.include_router(session_recordings_router, prefix="/api")

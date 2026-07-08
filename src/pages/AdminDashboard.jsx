@@ -13,6 +13,11 @@ const menuItems = [
     description: "Upload and manage recorded class sessions.",
     path: "/recordings",
   },
+  {
+    label: "Session Recordings",
+    description: "Play, download, and delete recorded sessions.",
+    path: "/session-recordings",
+  },
 ];
 
 function AdminDashboard() {

@@ -1,0 +1,301 @@
+:root {
+  --session-recording-ink: #17202a;
+  --session-recording-muted: #657386;
+  --session-recording-line: #dce3eb;
+  --session-recording-surface: #ffffff;
+  --session-recording-bg: #eef4fb;
+  --session-recording-primary: #2364d2;
+  --session-recording-primary-dark: #174da8;
+  --session-recording-teal: #00a896;
+  --session-recording-danger: #c73d4a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--session-recording-ink);
+  background: var(--session-recording-bg);
+}
+
+.session-recordings-page {
+  min-height: 100vh;
+  padding: 28px;
+  background: var(--session-recording-bg);
+}
+
+.session-recordings-shell {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.session-recordings-header,
+.session-recordings-panel,
+.playback-panel,
+.recording-status {
+  border: 1px solid var(--session-recording-line);
+  border-radius: 8px;
+  background: var(--session-recording-surface);
+  box-shadow: 0 18px 46px rgba(32, 45, 67, 0.09);
+}
+
+.session-recordings-header {
+  margin-bottom: 18px;
+  padding: 24px;
+}
+
+.session-recordings-header p {
+  margin: 0 0 8px;
+  color: var(--session-recording-teal);
+  font-size: 0.86rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.session-recordings-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.session-recordings-header span {
+  display: block;
+  margin-top: 10px;
+  color: var(--session-recording-muted);
+  line-height: 1.6;
+}
+
+.recording-status {
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  color: var(--session-recording-primary);
+  font-weight: 900;
+}
+
+.playback-panel {
+  margin-bottom: 18px;
+  padding: 18px;
+}
+
+.playback-screen {
+  display: grid;
+  place-items: center;
+  min-height: 240px;
+  border-radius: 8px;
+  background: #101828;
+  color: #ffffff;
+  text-align: center;
+}
+
+.playback-screen span {
+  color: #9ee7dd;
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.playback-screen strong {
+  margin-top: 10px;
+  font-size: 2rem;
+}
+
+.playback-screen p {
+  margin: 8px 0 0;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.session-recordings-panel__titlebar {
+  padding: 22px 24px;
+  border-bottom: 1px solid #edf1f6;
+}
+
+.session-recordings-panel__titlebar h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.session-recordings-panel__titlebar p {
+  margin: 8px 0 0;
+  color: var(--session-recording-muted);
+}
+
+.session-recordings-list {
+  display: grid;
+  gap: 14px;
+  padding: 20px 24px 24px;
+}
+
+.session-recording-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  border: 1px solid var(--session-recording-line);
+  border-radius: 8px;
+  padding: 18px;
+  background: #fbfcfe;
+}
+
+.session-recording-card__eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--session-recording-teal);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.session-recording-card h3 {
+  margin: 0 0 14px;
+  font-size: 1.35rem;
+  line-height: 1.2;
+}
+
+.session-recording-card dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.session-recording-card dt {
+  color: var(--session-recording-muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.session-recording-card dd {
+  margin: 5px 0 0;
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.session-recording-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.play-recording-button,
+.download-recording-button,
+.delete-recording-button {
+  min-height: 42px;
+  border-radius: 8px;
+  padding: 0 14px;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.play-recording-button {
+  border: 0;
+  background: var(--session-recording-primary);
+  color: #ffffff;
+}
+
+.play-recording-button:hover {
+  background: var(--session-recording-primary-dark);
+}
+
+.download-recording-button {
+  border: 1px solid var(--session-recording-line);
+  background: #ffffff;
+  color: var(--session-recording-primary);
+}
+
+.download-recording-button:hover {
+  border-color: var(--session-recording-primary);
+  background: #eef4ff;
+}
+
+.delete-recording-button {
+  border: 1px solid rgba(199, 61, 74, 0.34);
+  background: #ffffff;
+  color: var(--session-recording-danger);
+}
+
+.delete-recording-button:hover {
+  background: rgba(199, 61, 74, 0.08);
+}
+
+.session-recordings-empty {
+  border: 1px dashed #c8d3df;
+  border-radius: 8px;
+  padding: 34px;
+  text-align: center;
+}
+
+.session-recordings-empty h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.session-recordings-empty p {
+  margin: 8px 0 0;
+  color: var(--session-recording-muted);
+}
+
+@media (max-width: 980px) {
+  .session-recording-card {
+    grid-template-columns: 1fr;
+  }
+
+  .session-recording-card__actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 680px) {
+  .session-recordings-page {
+    padding: 16px;
+  }
+
+  .session-recording-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .session-recordings-panel__titlebar,
+  .session-recordings-list {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+.recording-status--error {
+  border-color: rgba(199, 61, 74, 0.28);
+  background: rgba(199, 61, 74, 0.08);
+  color: #c73d4a;
+}
+
+.playback-screen--video {
+  display: block;
+  padding: 18px;
+  text-align: left;
+}
+
+.playback-screen__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.playback-screen--video video {
+  display: block;
+  width: 100%;
+  max-height: 520px;
+  border-radius: 8px;
+  background: #000000;
+}
