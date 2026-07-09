@@ -7,6 +7,8 @@ import DigitalClassroom from "./pages/DigitalClassroom";
 import TrainerDashboard from "./pages/TrainerDashboard";
 import RecordingDashboard from "./pages/RecordingDashboard";
 import SessionRecordings from "./pages/SessionRecordings";
+import SessionManagement from "./pages/SessionManagement";
+import VirtualClassroom from "./pages/VirtualClassroom";
 import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
@@ -20,6 +22,8 @@ function App() {
       <Route path="/trainer-dashboard" element={<TrainerDashboard />} />
       <Route path="/recordings" element={<RecordingDashboard />} />
       <Route path="/session-recordings" element={<SessionRecordings />} />
+      <Route path="/session-management" element={<SessionManagement />} />
+      <Route path="/virtual-classroom" element={<VirtualClassroom />} />
       <Route path="/classroom" element={<DigitalClassroom />} />
     </Routes>
   );

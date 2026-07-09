@@ -118,3 +118,21 @@ export const sessionRecordingsApi = {
     }),
 };
 
+
+export const managedSessionsApi = {
+  list: () => request("/managed-sessions"),
+  create: (payload) =>
+    request("/managed-sessions", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  update: (id, payload) =>
+    request(`/managed-sessions/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  delete: (id) =>
+    request(`/managed-sessions/${id}`, {
+      method: "DELETE",
+    }),
+};

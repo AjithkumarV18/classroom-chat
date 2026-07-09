@@ -9,6 +9,7 @@ password_resets_collection = database["password_resets"]
 trainer_sessions_collection = database["trainer_sessions"]
 recordings_collection = database["recordings"]
 session_recordings_collection = database["session_recordings"]
+managed_sessions_collection = database["managed_sessions"]
 
 
 async def create_indexes() -> None:
@@ -21,3 +22,8 @@ async def create_indexes() -> None:
     await recordings_collection.create_index("uploaded_at")
     await session_recordings_collection.create_index("recording_id")
     await session_recordings_collection.create_index("uploaded_date")
+    await managed_sessions_collection.create_index("session_id")
+    await managed_sessions_collection.create_index("session_name")
+    await managed_sessions_collection.create_index("date")
+    await managed_sessions_collection.create_index("status")
+

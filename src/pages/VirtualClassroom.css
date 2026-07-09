@@ -1,0 +1,203 @@
+:root {
+  --virtual-ink: #17202a;
+  --virtual-muted: #657386;
+  --virtual-line: #dce3eb;
+  --virtual-surface: #ffffff;
+  --virtual-bg: #eef4fb;
+  --virtual-primary: #2364d2;
+  --virtual-teal: #00a896;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--virtual-ink);
+  background: var(--virtual-bg);
+}
+
+.virtual-classroom-page {
+  min-height: 100vh;
+  padding: 24px;
+  background: var(--virtual-bg);
+}
+
+.virtual-classroom-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--virtual-line);
+  border-radius: 8px;
+  padding: 22px;
+  background: var(--virtual-surface);
+  box-shadow: 0 18px 46px rgba(32, 45, 67, 0.09);
+}
+
+.virtual-classroom-header p {
+  margin: 0 0 8px;
+  color: var(--virtual-teal);
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.virtual-classroom-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.05;
+}
+
+.virtual-classroom-header span {
+  display: block;
+  margin-top: 10px;
+  color: var(--virtual-muted);
+}
+
+.virtual-classroom-header a,
+.virtual-whiteboard a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border-radius: 8px;
+  padding: 0 14px;
+  background: var(--virtual-primary);
+  color: #ffffff;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.virtual-classroom-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(320px, 0.85fr);
+  gap: 18px;
+}
+
+.virtual-video-area,
+.virtual-whiteboard,
+.virtual-chat {
+  border: 1px solid var(--virtual-line);
+  border-radius: 8px;
+  background: var(--virtual-surface);
+  box-shadow: 0 18px 46px rgba(32, 45, 67, 0.09);
+}
+
+.virtual-video-area {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 16px;
+}
+
+.virtual-video-tile {
+  display: grid;
+  place-items: center;
+  min-height: 260px;
+  border-radius: 8px;
+  background: #101828;
+  color: #ffffff;
+  text-align: center;
+}
+
+.virtual-video-tile--trainer { background: #143f7d; }
+.virtual-video-tile span { color: #9ee7dd; font-weight: 900; text-transform: uppercase; }
+.virtual-video-tile strong { margin-top: 8px; font-size: 1.3rem; }
+
+.virtual-whiteboard {
+  grid-column: 1 / 2;
+  min-height: 280px;
+  padding: 24px;
+  background:
+    linear-gradient(#eef2f7 1px, transparent 1px),
+    linear-gradient(90deg, #eef2f7 1px, transparent 1px),
+    #ffffff;
+  background-size: 32px 32px;
+}
+
+.virtual-whiteboard p {
+  margin: 0 0 8px;
+  color: var(--virtual-teal);
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.virtual-whiteboard h2 { margin: 0; font-size: 1.8rem; }
+.virtual-whiteboard span { display: block; max-width: 540px; margin: 10px 0 18px; color: var(--virtual-muted); line-height: 1.6; }
+
+.virtual-chat {
+  grid-row: span 2;
+  display: flex;
+  min-height: 560px;
+  flex-direction: column;
+  padding: 18px;
+}
+
+.virtual-chat h2 { margin: 0 0 14px; }
+
+.virtual-chat__messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  border: 1px solid var(--virtual-line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8fafc;
+}
+
+.virtual-chat__messages article {
+  border-radius: 8px;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.virtual-chat__messages p { margin: 5px 0 0; color: var(--virtual-muted); }
+
+.virtual-chat__controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.virtual-chat__controls input {
+  min-width: 0;
+  flex: 1;
+  min-height: 42px;
+  border: 1px solid var(--virtual-line);
+  border-radius: 8px;
+  padding: 0 12px;
+  font: inherit;
+}
+
+.virtual-chat__controls button {
+  border: 0;
+  border-radius: 8px;
+  padding: 0 14px;
+  background: var(--virtual-primary);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 900;
+}
+
+@media (max-width: 920px) {
+  .virtual-classroom-grid,
+  .virtual-video-area {
+    grid-template-columns: 1fr;
+  }
+
+  .virtual-whiteboard,
+  .virtual-chat {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .virtual-classroom-page { padding: 14px; }
+  .virtual-classroom-header { flex-direction: column; }
+}

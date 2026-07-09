@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import create_indexes
 from app.routes.auth import router as auth_router
+from app.routes.managed_sessions import router as managed_sessions_router
 from app.routes.recordings import router as recordings_router
 from app.routes.session_recordings import router as session_recordings_router
 from app.routes.trainer_sessions import router as trainer_sessions_router
@@ -37,6 +38,8 @@ async def health_check() -> dict[str, str]:
 
 
 app.include_router(auth_router, prefix="/api")
+app.include_router(managed_sessions_router, prefix="/api")
 app.include_router(trainer_sessions_router, prefix="/api")
 app.include_router(recordings_router, prefix="/api")
 app.include_router(session_recordings_router, prefix="/api")
+

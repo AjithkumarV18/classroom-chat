@@ -18,6 +18,11 @@ const menuItems = [
     description: "Play, download, and delete recorded sessions.",
     path: "/session-recordings",
   },
+  {
+    label: "Session Management",
+    description: "Create, edit, filter, and join virtual classroom sessions.",
+    path: "/session-management",
+  },
 ];
 
 function AdminDashboard() {

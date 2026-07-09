@@ -1,0 +1,278 @@
+:root {
+  --session-ink: #17202a;
+  --session-muted: #657386;
+  --session-line: #dce3eb;
+  --session-surface: #ffffff;
+  --session-bg: #eef4fb;
+  --session-primary: #2364d2;
+  --session-primary-dark: #174da8;
+  --session-teal: #00a896;
+  --session-danger: #c73d4a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  color: var(--session-ink);
+  background: var(--session-bg);
+}
+
+.session-management-page {
+  min-height: 100vh;
+  padding: 28px;
+  background: var(--session-bg);
+}
+
+.session-management-shell {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+}
+
+.session-management-header,
+.session-form-panel,
+.session-filter-panel,
+.session-list-panel,
+.session-management-error {
+  border: 1px solid var(--session-line);
+  border-radius: 8px;
+  background: var(--session-surface);
+  box-shadow: 0 18px 46px rgba(32, 45, 67, 0.09);
+}
+
+.session-management-header {
+  margin-bottom: 18px;
+  padding: 24px;
+}
+
+.session-management-header p {
+  margin: 0 0 8px;
+  color: var(--session-teal);
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.session-management-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.session-management-header span {
+  display: block;
+  margin-top: 10px;
+  color: var(--session-muted);
+  line-height: 1.6;
+}
+
+.session-management-error {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  color: var(--session-danger);
+  font-weight: 800;
+  background: rgba(199, 61, 74, 0.08);
+}
+
+.session-form-panel,
+.session-filter-panel,
+.session-list-panel {
+  margin-bottom: 18px;
+  padding: 22px;
+}
+
+.session-form-panel__header,
+.session-list-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.session-form-panel h2,
+.session-list-panel h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.session-form,
+.session-filter-panel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.session-form label,
+.session-filter-panel label {
+  display: grid;
+  gap: 8px;
+  color: var(--session-ink);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.session-form input,
+.session-form select,
+.session-form textarea,
+.session-filter-panel input,
+.session-filter-panel select {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid var(--session-line);
+  border-radius: 8px;
+  padding: 0 13px;
+  color: var(--session-ink);
+  font: inherit;
+  font-weight: 600;
+  outline: none;
+}
+
+.session-form textarea {
+  min-height: 92px;
+  padding-top: 12px;
+  resize: vertical;
+}
+
+.session-form input:focus,
+.session-form select:focus,
+.session-form textarea:focus,
+.session-filter-panel input:focus,
+.session-filter-panel select:focus {
+  border-color: var(--session-primary);
+  box-shadow: 0 0 0 4px rgba(35, 100, 210, 0.14);
+}
+
+.session-form__wide {
+  grid-column: span 2;
+}
+
+.session-primary-button,
+.session-secondary-button,
+.join-session-button,
+.delete-session-button {
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 0 16px;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.session-primary-button,
+.join-session-button {
+  border: 0;
+  background: var(--session-primary);
+  color: #ffffff;
+}
+
+.session-primary-button:hover,
+.join-session-button:hover {
+  background: var(--session-primary-dark);
+}
+
+.session-secondary-button {
+  border: 1px solid var(--session-line);
+  background: #ffffff;
+  color: var(--session-primary);
+}
+
+.delete-session-button {
+  border: 1px solid rgba(199, 61, 74, 0.34);
+  background: #ffffff;
+  color: var(--session-danger);
+}
+
+.managed-session-list {
+  display: grid;
+  gap: 14px;
+}
+
+.managed-session-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  border: 1px solid var(--session-line);
+  border-radius: 8px;
+  padding: 18px;
+  background: #fbfcfe;
+}
+
+.managed-session-card h3 {
+  margin: 10px 0 14px;
+  font-size: 1.35rem;
+}
+
+.managed-session-card dl {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.managed-session-card dt {
+  color: var(--session-muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.managed-session-card dd {
+  margin: 5px 0 0;
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.managed-session-card p {
+  margin: 14px 0 0;
+  color: var(--session-muted);
+  line-height: 1.55;
+}
+
+.session-status {
+  display: inline-flex;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.session-status--upcoming { background: #eef4ff; color: var(--session-primary); }
+.session-status--live { background: rgba(0, 168, 150, 0.12); color: #087c72; }
+.session-status--completed { background: #edf1f6; color: var(--session-muted); }
+
+.managed-session-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.managed-session-empty {
+  border: 1px dashed #c8d3df;
+  border-radius: 8px;
+  padding: 34px;
+  text-align: center;
+}
+
+.managed-session-empty h3 { margin: 0; }
+.managed-session-empty p { margin: 8px 0 0; color: var(--session-muted); }
+
+@media (max-width: 980px) {
+  .session-form,
+  .session-filter-panel,
+  .managed-session-card,
+  .managed-session-card dl {
+    grid-template-columns: 1fr;
+  }
+
+  .session-form__wide { grid-column: span 1; }
+  .managed-session-actions { align-items: stretch; flex-direction: column; }
+}
+
+@media (max-width: 640px) {
+  .session-management-page { padding: 16px; }
+  .session-form-panel__header,
+  .session-list-panel__header { align-items: flex-start; flex-direction: column; }
+}
