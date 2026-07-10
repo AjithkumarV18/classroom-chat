@@ -4,13 +4,14 @@ import shutil
 import uuid
 
 from bson import ObjectId
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+from app.authz import require_roles
 from app.database import recordings_collection
 
-router = APIRouter(prefix="/recordings", tags=["recordings"])
+router = APIRouter(prefix="/recordings", tags=["recordings"], dependencies=[Depends(require_roles("Teacher", "Admin"))])
 UPLOAD_DIR = Path(__file__).resolve().parents[2] / "uploads"
 UPLOAD_DIR.mkdir(exist_ok=True)
 
@@ -179,3 +180,5 @@ async def delete_recording(recording_object_id: str) -> None:
         stored_path = UPLOAD_DIR / stored_file_name
         if stored_path.exists() and stored_path.is_file():
             stored_path.unlink()
+
+

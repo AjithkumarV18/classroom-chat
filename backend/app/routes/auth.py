@@ -7,6 +7,7 @@ from pymongo.errors import DuplicateKeyError
 from app.config import settings
 from app.database import password_resets_collection, users_collection
 from app.schemas import (
+    DemoLoginRequest,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     LoginRequest,
@@ -27,6 +28,14 @@ def serialize_user(user: dict) -> UserResponse:
         first_name=user["first_name"],
         last_name=user["last_name"],
         email=user["email"],
+        role=user.get("role", "Student"),
+    )
+
+
+def create_user_token(user: dict) -> str:
+    return create_access_token(
+        str(user["_id"]),
+        {"email": user["email"], "role": user.get("role", "Student")},
     )
 
 
@@ -37,6 +46,7 @@ async def register(payload: RegisterRequest) -> TokenResponse:
         "first_name": payload.first_name.strip(),
         "last_name": payload.last_name.strip(),
         "email": normalized_email,
+        "role": payload.role,
         "password_hash": hash_password(payload.password),
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
@@ -51,7 +61,7 @@ async def register(payload: RegisterRequest) -> TokenResponse:
         ) from exc
 
     created_user = await users_collection.find_one({"_id": result.inserted_id})
-    token = create_access_token(str(result.inserted_id), {"email": normalized_email})
+    token = create_user_token(created_user)
 
     return TokenResponse(access_token=token, user=serialize_user(created_user))
 
@@ -67,8 +77,32 @@ async def login(payload: LoginRequest) -> TokenResponse:
             detail="Invalid email or password.",
         )
 
-    token = create_access_token(str(user["_id"]), {"email": normalized_email})
+    if "role" not in user:
+        await users_collection.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"role": "Student", "updated_at": datetime.now(timezone.utc)}},
+        )
+        user["role"] = "Student"
+
+    token = create_user_token(user)
     return TokenResponse(access_token=token, user=serialize_user(user))
+
+
+@router.post("/demo-login", response_model=TokenResponse)
+async def demo_login(payload: DemoLoginRequest) -> TokenResponse:
+    role = payload.role
+    demo_user = {
+        "_id": f"demo-{role.lower()}",
+        "first_name": role,
+        "last_name": "Demo",
+        "email": f"{role.lower()}@demo.local",
+        "role": role,
+    }
+    token = create_access_token(
+        demo_user["_id"],
+        {"email": demo_user["email"], "role": role},
+    )
+    return TokenResponse(access_token=token, user=serialize_user(demo_user))
 
 
 @router.post("/forgot-password", response_model=ForgotPasswordResponse)

@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from app.authz import require_roles
 from app.database import session_recordings_collection
 
-router = APIRouter(prefix="/session-recordings", tags=["session recordings"])
+router = APIRouter(prefix="/session-recordings", tags=["session recordings"], dependencies=[Depends(require_roles("Student", "Teacher", "Employer", "Employee", "Admin"))])
 
 
 class SessionRecordingCreate(BaseModel):
@@ -115,3 +116,5 @@ async def delete_session_recording(session_recording_id: str) -> None:
     result = await session_recordings_collection.delete_one({"_id": object_id_or_404(session_recording_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session recording not found.")
+
+

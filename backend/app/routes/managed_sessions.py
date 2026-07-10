@@ -2,12 +2,13 @@ from datetime import datetime, timezone
 from typing import Literal
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from app.authz import require_roles
 from app.database import managed_sessions_collection
 
-router = APIRouter(prefix="/managed-sessions", tags=["managed sessions"])
+router = APIRouter(prefix="/managed-sessions", tags=["managed sessions"], dependencies=[Depends(require_roles("Teacher", "Admin"))])
 SessionStatus = Literal["Upcoming", "Live", "Completed"]
 
 
@@ -120,3 +121,5 @@ async def delete_session(session_object_id: str) -> None:
     result = await managed_sessions_collection.delete_one({"_id": object_id_or_404(session_object_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found.")
+
+

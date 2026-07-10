@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Login.css";
 import { Link, useNavigate } from "react-router-dom";
+import { roles, saveAuthSession } from "../auth/auth";
+import { authApi } from "../services/api";
 
 const features = [
   {
@@ -19,10 +21,25 @@ const features = [
 
 function Login() {
   const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [demoRole, setDemoRole] = useState("Admin");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
-    navigate("/dashboard");
+
+    try {
+      setErrorMessage("");
+      const authData = email.trim() && password
+        ? await authApi.login({ email, password })
+        : await authApi.demoLogin(demoRole);
+
+      saveAuthSession(authData);
+      navigate("/dashboard");
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to login.");
+    }
   };
 
   return (
@@ -71,8 +88,10 @@ function Login() {
         <form className="login-card" onSubmit={handleSubmit}>
           <div className="login-card__header">
             <h2>Welcome Back</h2>
-            <p>Sign in to continue your AI learning journey.</p>
+            <p>Use email/password, or leave them blank and choose a demo role.</p>
           </div>
+
+          {errorMessage ? <p className="login-error">{errorMessage}</p> : null}
 
           <label className="login-field" htmlFor="email">
             <span>Email Address</span>
@@ -82,6 +101,8 @@ function Login() {
               type="email"
               placeholder="Enter your email"
               autoComplete="email"
+              onChange={(event) => setEmail(event.target.value)}
+              value={email}
             />
           </label>
 
@@ -93,7 +114,18 @@ function Login() {
               type="password"
               placeholder="Enter your password"
               autoComplete="current-password"
+              onChange={(event) => setPassword(event.target.value)}
+              value={password}
             />
+          </label>
+
+          <label className="login-field" htmlFor="demoRole">
+            <span>Demo Role</span>
+            <select id="demoRole" onChange={(event) => setDemoRole(event.target.value)} value={demoRole}>
+              {roles.map((role) => (
+                <option key={role} value={role}>{role}</option>
+              ))}
+            </select>
           </label>
 
           <div className="login-options">
@@ -118,5 +150,3 @@ function Login() {
 }
 
 export default Login;
-
-

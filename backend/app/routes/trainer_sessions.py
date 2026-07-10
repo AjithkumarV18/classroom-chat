@@ -1,12 +1,13 @@
 from datetime import datetime, timezone
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
+from app.authz import require_roles
 from app.database import trainer_sessions_collection
 
-router = APIRouter(prefix="/trainer-sessions", tags=["trainer sessions"])
+router = APIRouter(prefix="/trainer-sessions", tags=["trainer sessions"], dependencies=[Depends(require_roles("Teacher", "Admin"))])
 
 
 class TrainerSessionCreate(BaseModel):
@@ -103,3 +104,5 @@ async def delete_trainer_session(session_id: str) -> None:
     result = await trainer_sessions_collection.delete_one({"_id": object_id_or_404(session_id)})
     if result.deleted_count == 0:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Trainer session not found.")
+
+

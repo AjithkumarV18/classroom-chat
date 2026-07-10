@@ -10,6 +10,9 @@ import SessionRecordings from "./pages/SessionRecordings";
 import SessionManagement from "./pages/SessionManagement";
 import VirtualClassroom from "./pages/VirtualClassroom";
 import AdminDashboard from "./pages/AdminDashboard";
+import AccessDenied from "./pages/AccessDenied";
+import ProtectedRoute from "./auth/ProtectedRoute";
+import { routePermissions } from "./auth/auth";
 
 function App() {
   return (
@@ -18,13 +21,14 @@ function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/dashboard" element={<AdminDashboard />} />
-      <Route path="/trainer-dashboard" element={<TrainerDashboard />} />
-      <Route path="/recordings" element={<RecordingDashboard />} />
-      <Route path="/session-recordings" element={<SessionRecordings />} />
-      <Route path="/session-management" element={<SessionManagement />} />
-      <Route path="/virtual-classroom" element={<VirtualClassroom />} />
-      <Route path="/classroom" element={<DigitalClassroom />} />
+      <Route path="/access-denied" element={<AccessDenied />} />
+      <Route path="/dashboard" element={<ProtectedRoute allowedRoles={routePermissions.dashboard}><AdminDashboard /></ProtectedRoute>} />
+      <Route path="/trainer-dashboard" element={<ProtectedRoute allowedRoles={routePermissions.trainer}><TrainerDashboard /></ProtectedRoute>} />
+      <Route path="/recordings" element={<ProtectedRoute allowedRoles={routePermissions.recordings}><RecordingDashboard /></ProtectedRoute>} />
+      <Route path="/session-recordings" element={<ProtectedRoute allowedRoles={routePermissions.sessionRecordings}><SessionRecordings /></ProtectedRoute>} />
+      <Route path="/session-management" element={<ProtectedRoute allowedRoles={routePermissions.sessionManagement}><SessionManagement /></ProtectedRoute>} />
+      <Route path="/virtual-classroom" element={<ProtectedRoute allowedRoles={routePermissions.virtualClassroom}><VirtualClassroom /></ProtectedRoute>} />
+      <Route path="/classroom" element={<ProtectedRoute allowedRoles={routePermissions.classroom}><DigitalClassroom /></ProtectedRoute>} />
     </Routes>
   );
 }

@@ -1,3 +1,5 @@
+import { getAuthToken } from "../auth/auth";
+
 export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:8000";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${API_ORIGIN}/api`;
 
@@ -11,6 +13,7 @@ async function request(path, options = {}) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      ...(getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {}),
       ...options.headers,
     },
     ...options,
@@ -22,6 +25,7 @@ async function request(path, options = {}) {
 async function multipartRequest(path, formData) {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     method: "POST",
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
     body: formData,
   });
 
@@ -134,5 +138,18 @@ export const managedSessionsApi = {
   delete: (id) =>
     request(`/managed-sessions/${id}`, {
       method: "DELETE",
+    }),
+};
+
+export const authApi = {
+  login: (payload) =>
+    request("/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  demoLogin: (role) =>
+    request("/auth/demo-login", {
+      method: "POST",
+      body: JSON.stringify({ role }),
     }),
 };

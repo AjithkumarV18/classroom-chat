@@ -1,4 +1,8 @@
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr, Field, field_validator
+
+UserRole = Literal["Student", "Teacher", "Employer", "Employee", "Admin"]
 
 
 class RegisterRequest(BaseModel):
@@ -6,6 +10,7 @@ class RegisterRequest(BaseModel):
     last_name: str = Field(..., min_length=1, max_length=80)
     email: EmailStr
     password: str = Field(..., min_length=8)
+    role: UserRole = "Student"
 
     @field_validator("password")
     @classmethod
@@ -24,6 +29,10 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(..., min_length=1)
+
+
+class DemoLoginRequest(BaseModel):
+    role: UserRole
 
 
 class ForgotPasswordRequest(BaseModel):
@@ -46,6 +55,7 @@ class UserResponse(BaseModel):
     first_name: str
     last_name: str
     email: EmailStr
+    role: UserRole
 
 
 class TokenResponse(BaseModel):
