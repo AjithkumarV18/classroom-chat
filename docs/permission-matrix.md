@@ -7,10 +7,10 @@ Roles: Student, Teacher, Employer, Employee, Admin.
 | Route | Student | Teacher | Employer | Employee | Admin |
 |---|---:|---:|---:|---:|---:|
 | `/dashboard` | Yes | Yes | Yes | Yes | Yes |
-| `/trainer-dashboard` | No | Yes | No | No | Yes |
-| `/recordings` | No | Yes | No | No | Yes |
+| `/trainer-dashboard` | Yes | Yes | No | No | Yes |
+| `/recordings` | Yes | Yes | No | No | Yes |
 | `/session-recordings` | Yes | Yes | Yes | Yes | Yes |
-| `/session-management` | No | Yes | No | No | Yes |
+| `/session-management` | Yes | Yes | No | No | Yes |
 | `/virtual-classroom` | Yes | Yes | No | No | Yes |
 | `/classroom` | Yes | Yes | No | No | Yes |
 
@@ -21,9 +21,9 @@ Unauthenticated users are redirected to `/`.
 
 | API Group | Student | Teacher | Employer | Employee | Admin |
 |---|---:|---:|---:|---:|---:|
-| `/api/trainer-sessions` | No | Yes | No | No | Yes |
-| `/api/managed-sessions` | No | Yes | No | No | Yes |
-| `/api/recordings` | No | Yes | No | No | Yes |
+| `/api/trainer-sessions` | Yes | Yes | No | No | Yes |
+| `/api/managed-sessions` | Yes | Yes | No | No | Yes |
+| `/api/recordings` | Yes | Yes | No | No | Yes |
 | `/api/session-recordings` | Yes | Yes | Yes | Yes | Yes |
 | `/api/auth/*` | Public | Public | Public | Public | Public |
 

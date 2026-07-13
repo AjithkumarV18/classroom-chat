@@ -1,0 +1,275 @@
+{
+  "info": {
+    "name": "Classroom Chat - Attendance Management",
+    "description": "Postman collection for Attendance Management protected APIs.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "sessionId",
+      "value": "SESSION-1001"
+    },
+    {
+      "key": "studentId",
+      "value": "demo-student"
+    }
+  ],
+  "item": [
+    {
+      "name": "Demo Login - Teacher",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('token', data.access_token);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"Teacher\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/demo-login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "demo-login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Demo Login - Student",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const data = pm.response.json();",
+              "pm.collectionVariables.set('token', data.access_token);",
+              "pm.collectionVariables.set('studentId', 'demo-student');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"role\": \"Student\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/demo-login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "demo-login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Mark Attendance",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{studentId}}\",\n  \"session_id\": \"{{sessionId}}\",\n  \"join_time\": \"2026-07-13T10:00:00Z\",\n  \"status\": \"Present\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/attendance/mark",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "attendance",
+            "mark"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Duplicate Attendance Check",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{studentId}}\",\n  \"session_id\": \"{{sessionId}}\",\n  \"join_time\": \"2026-07-13T10:00:00Z\",\n  \"status\": \"Present\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/attendance/mark",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "attendance",
+            "mark"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Update Attendance",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"user_id\": \"{{studentId}}\",\n  \"session_id\": \"{{sessionId}}\",\n  \"leave_time\": \"2026-07-13T11:15:00Z\",\n  \"status\": \"Left\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/attendance/update",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "attendance",
+            "update"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Attendance By Session",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/attendance/session/{{sessionId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "attendance",
+            "session",
+            "{{sessionId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get Attendance By Student",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/attendance/student/{{studentId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "attendance",
+            "student",
+            "{{studentId}}"
+          ]
+        }
+      }
+    }
+  ]
+}

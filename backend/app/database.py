@@ -1,4 +1,4 @@
-from motor.motor_asyncio import AsyncIOMotorClient
+﻿from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.config import settings
 
@@ -10,6 +10,7 @@ trainer_sessions_collection = database["trainer_sessions"]
 recordings_collection = database["recordings"]
 session_recordings_collection = database["session_recordings"]
 managed_sessions_collection = database["managed_sessions"]
+attendance_collection = database["attendance"]
 
 
 async def create_indexes() -> None:
@@ -26,4 +27,9 @@ async def create_indexes() -> None:
     await managed_sessions_collection.create_index("session_name")
     await managed_sessions_collection.create_index("date")
     await managed_sessions_collection.create_index("status")
+    await attendance_collection.create_index([("user_id", 1), ("session_id", 1)], unique=True)
+    await attendance_collection.create_index("session_id")
+    await attendance_collection.create_index("user_id")
+    await attendance_collection.create_index("join_time")
+
 
