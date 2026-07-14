@@ -1,4 +1,4 @@
-import { getAuthToken } from "../auth/auth";
+﻿import { getAuthToken } from "../auth/auth";
 
 export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:8000";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${API_ORIGIN}/api`;
@@ -141,6 +141,22 @@ export const managedSessionsApi = {
     }),
 };
 
+export const attendanceApi = {
+  mark: (payload) =>
+    request("/attendance/mark", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listBySession: (sessionId) =>
+    request(`/attendance/session/${encodeURIComponent(sessionId)}`),
+  listByStudent: (studentId) =>
+    request(`/attendance/student/${encodeURIComponent(studentId)}`),
+  update: (payload) =>
+    request("/attendance/update", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+};
 export const authApi = {
   login: (payload) =>
     request("/auth/login", {
@@ -153,3 +169,4 @@ export const authApi = {
       body: JSON.stringify({ role }),
     }),
 };
+

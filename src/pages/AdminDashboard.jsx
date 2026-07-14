@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Link } from "react-router-dom";
 import "./AdminDashboard.css";
 
@@ -22,6 +22,11 @@ const menuItems = [
     label: "Session Management",
     description: "Create, edit, filter, and join virtual classroom sessions.",
     path: "/session-management",
+  },
+  {
+    label: "Attendance",
+    description: "Monitor attendance and review student participation records.",
+    path: "/attendance",
   },
 ];
 
@@ -80,3 +85,4 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
+

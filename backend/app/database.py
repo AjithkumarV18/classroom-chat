@@ -33,3 +33,4 @@ async def create_indexes() -> None:
     await attendance_collection.create_index("join_time")
 
 
+

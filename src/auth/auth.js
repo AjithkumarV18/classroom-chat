@@ -1,4 +1,4 @@
-export const roles = ["Student", "Teacher", "Employer", "Employee", "Admin"];
+﻿export const roles = ["Student", "Teacher", "Employer", "Employee", "Admin"];
 
 export const routePermissions = {
   dashboard: roles,
@@ -8,6 +8,7 @@ export const routePermissions = {
   sessionManagement: ["Teacher", "Admin"],
   classroom: ["Student", "Teacher", "Admin"],
   virtualClassroom: ["Student", "Teacher", "Admin"],
+  attendance: ["Student", "Teacher", "Admin"],
 };
 
 export function saveAuthSession(authData) {
@@ -41,3 +42,4 @@ export function canAccess(allowedRoles) {
   const role = getUserRole();
   return Boolean(role) && allowedRoles.includes(role);
 }
+
