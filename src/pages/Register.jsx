@@ -1,11 +1,14 @@
 import React, { useMemo, useState } from "react";
 import "./Register.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { roles, saveAuthSession } from "../auth/auth";
+import { authApi } from "../services/api";
 
 const initialValues = {
   firstName: "",
   lastName: "",
   email: "",
+  role: "Student",
   password: "",
   confirmPassword: "",
 };
@@ -50,6 +53,10 @@ function validateField(name, value, values) {
     return "Enter a valid email address.";
   }
 
+  if (name === "role" && !roles.includes(value)) {
+    return "Please select a valid role.";
+  }
+
   if (name === "password") {
     if (!passwordRules.minLength.test(value)) {
       return "Password must be at least 8 characters.";
@@ -89,11 +96,14 @@ function validateForm(values) {
 }
 
 function Register() {
+  const navigate = useNavigate();
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const passwordStrength = useMemo(
     () => getPasswordStrength(values.password),
@@ -105,6 +115,7 @@ function Register() {
     const nextValues = { ...values, [name]: value };
 
     setValues(nextValues);
+    setServerError("");
 
     if (touched[name]) {
       setErrors((currentErrors) => ({
@@ -136,7 +147,7 @@ function Register() {
     }));
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const nextErrors = validateForm(values);
@@ -147,12 +158,29 @@ function Register() {
 
     setTouched(nextTouched);
     setErrors(nextErrors);
+    setServerError("");
 
     if (Object.values(nextErrors).some(Boolean)) {
       return;
     }
 
-    console.log("Registration form submitted", values);
+    try {
+      setIsSubmitting(true);
+      const authData = await authApi.register({
+        first_name: values.firstName.trim(),
+        last_name: values.lastName.trim(),
+        email: values.email.trim().toLowerCase(),
+        role: values.role,
+        password: values.password,
+      });
+
+      saveAuthSession(authData);
+      navigate("/dashboard");
+    } catch (error) {
+      setServerError(error.message || "Unable to register. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -170,8 +198,10 @@ function Register() {
         <form className="register-card" onSubmit={handleSubmit} noValidate>
           <div className="register-card__header">
             <h2>Register</h2>
-            <p>Enter your details to start learning.</p>
+            <p>Enter your details and choose your account role.</p>
           </div>
+
+          {serverError ? <p className="register-server-error">{serverError}</p> : null}
 
           <div className="register-grid">
             <Field
@@ -204,6 +234,13 @@ function Register() {
             placeholder="Enter email address"
             type="email"
             value={values.email}
+          />
+
+          <RoleField
+            error={touched.role ? errors.role : ""}
+            onBlur={handleBlur}
+            onChange={handleChange}
+            value={values.role}
           />
 
           <PasswordField
@@ -247,8 +284,8 @@ function Register() {
             value={values.confirmPassword}
           />
 
-          <button className="register-button" type="submit">
-            Register
+          <button className="register-button" disabled={isSubmitting} type="submit">
+            {isSubmitting ? "Creating Account..." : "Register"}
           </button>
 
           <p className="register-login">
@@ -286,6 +323,34 @@ function Field({
         type={type}
         value={value}
       />
+      <small className="register-error" id={errorId}>
+        {error}
+      </small>
+    </label>
+  );
+}
+
+function RoleField({ error, onBlur, onChange, value }) {
+  const errorId = "role-error";
+
+  return (
+    <label className="register-field" htmlFor="role">
+      <span>Role</span>
+      <select
+        aria-describedby={error ? errorId : undefined}
+        aria-invalid={Boolean(error)}
+        id="role"
+        name="role"
+        onBlur={onBlur}
+        onChange={onChange}
+        value={value}
+      >
+        {roles.map((role) => (
+          <option key={role} value={role}>
+            {role}
+          </option>
+        ))}
+      </select>
       <small className="register-error" id={errorId}>
         {error}
       </small>

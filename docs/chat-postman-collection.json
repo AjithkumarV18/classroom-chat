@@ -1,0 +1,69 @@
+﻿{
+  "info": {
+    "name": "Classroom Chat - Virtual Classroom Chat API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" },
+    { "key": "sessionId", "value": "SES-260713-ABC123" },
+    { "key": "messageId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Demo Login - Teacher",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "const data = pm.response.json();",
+            "pm.collectionVariables.set('token', data.access_token);"
+          ]
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"role\": \"Teacher\"\n}" },
+        "url": "{{baseUrl}}/api/auth/demo-login"
+      }
+    },
+    {
+      "name": "Send Message",
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "const data = pm.response.json();",
+            "pm.collectionVariables.set('messageId', data.message_id);"
+          ]
+        }
+      }],
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": { "mode": "raw", "raw": "{\n  \"session_id\": \"{{sessionId}}\",\n  \"sender_id\": \"demo-teacher\",\n  \"sender_name\": \"Teacher Demo\",\n  \"message\": \"Welcome to the live class.\",\n  \"message_type\": \"Text\"\n}" },
+        "url": "{{baseUrl}}/api/chat/send"
+      }
+    },
+    {
+      "name": "Get Session Messages",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "GET",
+        "url": "{{baseUrl}}/api/chat/session/{{sessionId}}"
+      }
+    },
+    {
+      "name": "Delete Message",
+      "request": {
+        "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] },
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/chat/{{messageId}}"
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,6 +8,7 @@ from app.config import settings
 from app.database import create_indexes
 from app.routes.auth import router as auth_router
 from app.routes.attendance import router as attendance_router
+from app.routes.chat import router as chat_router
 from app.routes.managed_sessions import router as managed_sessions_router
 from app.routes.recordings import router as recordings_router
 from app.routes.session_recordings import router as session_recordings_router
@@ -52,10 +53,12 @@ async def debug_mongo():
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(attendance_router, prefix="/api")
+app.include_router(chat_router, prefix="/api")
 app.include_router(managed_sessions_router, prefix="/api")
 app.include_router(trainer_sessions_router, prefix="/api")
 app.include_router(recordings_router, prefix="/api")
 app.include_router(session_recordings_router, prefix="/api")
+
 
 
 

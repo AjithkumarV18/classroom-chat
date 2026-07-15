@@ -1,4 +1,4 @@
-﻿from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.config import settings
 
@@ -11,6 +11,7 @@ recordings_collection = database["recordings"]
 session_recordings_collection = database["session_recordings"]
 managed_sessions_collection = database["managed_sessions"]
 attendance_collection = database["attendance"]
+chat_messages_collection = database["chat_messages"]
 
 
 async def create_indexes() -> None:
@@ -31,6 +32,11 @@ async def create_indexes() -> None:
     await attendance_collection.create_index("session_id")
     await attendance_collection.create_index("user_id")
     await attendance_collection.create_index("join_time")
+    await chat_messages_collection.create_index("message_id", unique=True)
+    await chat_messages_collection.create_index([("session_id", 1), ("timestamp", 1)])
+    await chat_messages_collection.create_index("sender_id")
+    await chat_messages_collection.create_index("date_created")
+
 
 
 

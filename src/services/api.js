@@ -157,7 +157,26 @@ export const attendanceApi = {
       body: JSON.stringify(payload),
     }),
 };
+
+export const chatApi = {
+  send: (payload) =>
+    request("/chat/send", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  listBySession: (sessionId) =>
+    request(`/chat/session/${encodeURIComponent(sessionId)}`),
+  delete: (messageId) =>
+    request(`/chat/${encodeURIComponent(messageId)}`, {
+      method: "DELETE",
+    }),
+};
 export const authApi = {
+  register: (payload) =>
+    request("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   login: (payload) =>
     request("/auth/login", {
       method: "POST",
@@ -169,4 +188,6 @@ export const authApi = {
       body: JSON.stringify({ role }),
     }),
 };
+
+
 

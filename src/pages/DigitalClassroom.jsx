@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import ClassroomChat from "../ClassroomChat";
 import "./DigitalClassroom.css";
 
@@ -20,6 +21,8 @@ const colors = ["#17202a", "#2364d2", "#00a896", "#c73d4a", "#d98c00"];
 const stickyColors = ["#fff3a3", "#c8f7dc", "#dbeafe", "#ffe0d6"];
 
 function DigitalClassroom() {
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get("sessionId") || "SESSION";
   const boardRef = useRef(null);
   const [activeTool, setActiveTool] = useState("pen");
   const [strokeColor, setStrokeColor] = useState("#2364d2");
@@ -279,7 +282,7 @@ function DigitalClassroom() {
       </section>
 
       <aside className="classroom-sidebar" aria-label="Classroom chat sidebar">
-        <ClassroomChat />
+        <ClassroomChat sessionId={sessionId} />
       </aside>
     </main>
   );
@@ -401,3 +404,4 @@ function distance(firstPoint, secondPoint) {
 }
 
 export default DigitalClassroom;
+

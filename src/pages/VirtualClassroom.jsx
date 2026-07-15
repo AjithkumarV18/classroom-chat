@@ -1,25 +1,11 @@
-import React, { useState } from "react";
+﻿import React from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import ClassroomChat from "../ClassroomChat";
 import "./VirtualClassroom.css";
 
 function VirtualClassroom() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("sessionId") || "SESSION";
-  const [messages, setMessages] = useState([
-    { sender: "System", text: `Joined virtual classroom ${sessionId}.` },
-  ]);
-  const [messageText, setMessageText] = useState("");
-
-  const sendMessage = () => {
-    const trimmedMessage = messageText.trim();
-    if (!trimmedMessage) return;
-
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      { sender: "You", text: trimmedMessage },
-    ]);
-    setMessageText("");
-  };
 
   return (
     <main className="virtual-classroom-page">
@@ -54,27 +40,7 @@ function VirtualClassroom() {
         </section>
 
         <aside className="virtual-chat" aria-label="Virtual classroom chat">
-          <h2>Class Chat</h2>
-          <div className="virtual-chat__messages">
-            {messages.map((message, index) => (
-              <article key={`${message.sender}-${index}`}>
-                <strong>{message.sender}</strong>
-                <p>{message.text}</p>
-              </article>
-            ))}
-          </div>
-          <div className="virtual-chat__controls">
-            <input
-              onChange={(event) => setMessageText(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") sendMessage();
-              }}
-              placeholder="Type message"
-              type="text"
-              value={messageText}
-            />
-            <button onClick={sendMessage} type="button">Send</button>
-          </div>
+          <ClassroomChat sessionId={sessionId} />
         </aside>
       </section>
     </main>
@@ -82,3 +48,4 @@ function VirtualClassroom() {
 }
 
 export default VirtualClassroom;
+
