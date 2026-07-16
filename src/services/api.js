@@ -1,4 +1,4 @@
-﻿import { getAuthToken } from "../auth/auth";
+import { getAuthToken } from "../auth/auth";
 
 export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:8000";
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${API_ORIGIN}/api`;
@@ -168,6 +168,25 @@ export const chatApi = {
     request(`/chat/session/${encodeURIComponent(sessionId)}`),
   delete: (messageId) =>
     request(`/chat/${encodeURIComponent(messageId)}`, {
+      method: "DELETE",
+    }),
+};
+
+export const whiteboardApi = {
+  save: (payload) =>
+    request("/whiteboard/save", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  getBySession: (sessionId) =>
+    request(`/whiteboard/${encodeURIComponent(sessionId)}`),
+  updateSession: (sessionId, payload) =>
+    request(`/whiteboard/${encodeURIComponent(sessionId)}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  clearSession: (sessionId) =>
+    request(`/whiteboard/${encodeURIComponent(sessionId)}`, {
       method: "DELETE",
     }),
 };

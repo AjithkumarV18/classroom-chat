@@ -13,6 +13,7 @@ from app.routes.managed_sessions import router as managed_sessions_router
 from app.routes.recordings import router as recordings_router
 from app.routes.session_recordings import router as session_recordings_router
 from app.routes.trainer_sessions import router as trainer_sessions_router
+from app.routes.whiteboard import router as whiteboard_router
 from app.database import attendance_collection
 from app.config import settings
 
@@ -58,6 +59,7 @@ app.include_router(managed_sessions_router, prefix="/api")
 app.include_router(trainer_sessions_router, prefix="/api")
 app.include_router(recordings_router, prefix="/api")
 app.include_router(session_recordings_router, prefix="/api")
+app.include_router(whiteboard_router, prefix="/api")
 
 
 

@@ -1,0 +1,34 @@
+{
+  "info": {
+    "name": "Classroom Chat - Whiteboard Collaboration API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" },
+    { "key": "sessionId", "value": "SES-260713-ABC123" }
+  ],
+  "item": [
+    {
+      "name": "Demo Login - Teacher",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const data = pm.response.json();", "pm.collectionVariables.set('token', data.access_token);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"Teacher\"\n}" }, "url": "{{baseUrl}}/api/auth/demo-login" }
+    },
+    {
+      "name": "Save Drawing",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"session_id\": \"{{sessionId}}\",\n  \"user_id\": \"demo-teacher\",\n  \"drawing_data\": { \"id\": \"shape-1\", \"type\": \"rectangle\", \"start\": { \"x\": 10, \"y\": 10 }, \"end\": { \"x\": 140, \"y\": 80 } },\n  \"tool_type\": \"Shape\",\n  \"color\": \"#2364d2\",\n  \"stroke_width\": 4\n}" }, "url": "{{baseUrl}}/api/whiteboard/save" }
+    },
+    {
+      "name": "Get Whiteboard",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/api/whiteboard/{{sessionId}}" }
+    },
+    {
+      "name": "Update Whiteboard",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"user_id\": \"demo-teacher\",\n  \"drawings\": []\n}" }, "url": "{{baseUrl}}/api/whiteboard/{{sessionId}}" }
+    },
+    {
+      "name": "Clear Whiteboard",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "DELETE", "url": "{{baseUrl}}/api/whiteboard/{{sessionId}}" }
+    }
+  ]
+}

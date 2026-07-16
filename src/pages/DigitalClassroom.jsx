@@ -1,6 +1,8 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import ClassroomChat from "../ClassroomChat";
+import { getAuthUser } from "../auth/auth";
+import { whiteboardApi } from "../services/api";
 import "./DigitalClassroom.css";
 
 const STORAGE_KEY = "ai-education-whiteboard-elements";
@@ -23,6 +25,7 @@ const stickyColors = ["#fff3a3", "#c8f7dc", "#dbeafe", "#ffe0d6"];
 function DigitalClassroom() {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("sessionId") || "SESSION";
+  const authUser = getAuthUser();
   const boardRef = useRef(null);
   const [activeTool, setActiveTool] = useState("pen");
   const [strokeColor, setStrokeColor] = useState("#2364d2");
@@ -31,10 +34,16 @@ function DigitalClassroom() {
   const [elements, setElements] = useState(() => loadSavedElements());
   const [draft, setDraft] = useState(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(elements));
-  }, [elements]);
+    localStorage.setItem(`${STORAGE_KEY}-${sessionId}`, JSON.stringify(elements));
+  }, [elements, sessionId]);
+
+  useEffect(() => {
+    loadBoardFromServer();
+  }, [sessionId]);
 
   const getBoardPoint = (event) => {
     const rect = boardRef.current.getBoundingClientRect();
@@ -160,9 +169,63 @@ function DigitalClassroom() {
   const clearBoard = () => {
     setElements([]);
     setDraft(null);
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(`${STORAGE_KEY}-${sessionId}`);
   };
 
+
+  const mapElementToPayload = (element) => ({
+    session_id: sessionId,
+    user_id: authUser?.id || "",
+    drawing_data: element,
+    tool_type: mapElementToolType(element.type),
+    color: element.color || null,
+    stroke_width: element.type === "pen" || element.type === "arrow" ? 5 : 4,
+  });
+
+  const saveBoardToServer = async () => {
+    if (!authUser?.id) {
+      setSyncStatus("Please login again before saving the whiteboard.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setSyncStatus("");
+      await whiteboardApi.updateSession(sessionId, {
+        user_id: authUser.id,
+        drawings: elements.map(mapElementToPayload),
+      });
+      setSyncStatus("Whiteboard saved successfully.");
+    } catch (error) {
+      setSyncStatus(error.message || "Unable to save whiteboard.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const loadBoardFromServer = async () => {
+    try {
+      setSyncStatus("");
+      const response = await whiteboardApi.getBySession(sessionId);
+      const serverElements = response.drawings.map((entry) => entry.drawing_data);
+      if (serverElements.length > 0) {
+        setElements(serverElements);
+      }
+    } catch (error) {
+      setSyncStatus(error.message || "Unable to load saved whiteboard.");
+    }
+  };
+
+  const clearBoardOnServer = async () => {
+    try {
+      setSyncStatus("");
+      await whiteboardApi.clearSession(sessionId);
+      clearBoard();
+      setSyncStatus("Whiteboard cleared successfully.");
+    } catch (error) {
+      setSyncStatus(error.message || "Only trainers or admins can clear the server whiteboard.");
+    }
+  };
   const visibleElements = draft ? [...elements, draft] : elements;
 
   return (
@@ -174,10 +237,20 @@ function DigitalClassroom() {
               <p>Digital Classroom</p>
               <h1>Whiteboard Development Sandbox</h1>
             </div>
-            <button className="whiteboard-clear" type="button" onClick={clearBoard}>
-              Clear Board
-            </button>
+            <div className="whiteboard-actions">
+              <button className="whiteboard-save" disabled={isSaving} type="button" onClick={saveBoardToServer}>
+                {isSaving ? "Saving..." : "Save Board"}
+              </button>
+              <button className="whiteboard-clear" type="button" onClick={loadBoardFromServer}>
+                Reload Board
+              </button>
+              <button className="whiteboard-clear" type="button" onClick={clearBoardOnServer}>
+                Clear Board
+              </button>
+            </div>
           </div>
+
+          {syncStatus ? <p className="whiteboard-sync-status">{syncStatus}</p> : null}
 
           <div className="whiteboard-toolbar" aria-label="Whiteboard tools">
             <div className="tool-group">
@@ -286,6 +359,14 @@ function DigitalClassroom() {
       </aside>
     </main>
   );
+}
+
+function mapElementToolType(type) {
+  if (type === "pen") return "Pen";
+  if (type === "eraser") return "Eraser";
+  if (type === "text") return "Text";
+  if (type === "sticky") return "Sticky";
+  return "Shape";
 }
 
 function loadSavedElements() {

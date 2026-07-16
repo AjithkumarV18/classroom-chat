@@ -281,3 +281,37 @@ body {
     min-height: 600px;
   }
 }
+
+.whiteboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.whiteboard-save {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 14px;
+  background: #2364d2;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.whiteboard-save:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.whiteboard-sync-status {
+  margin: 0 0 12px;
+  border: 1px solid #dce3eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  color: #657386;
+  font-weight: 800;
+}

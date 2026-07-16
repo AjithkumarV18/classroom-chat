@@ -12,6 +12,7 @@ session_recordings_collection = database["session_recordings"]
 managed_sessions_collection = database["managed_sessions"]
 attendance_collection = database["attendance"]
 chat_messages_collection = database["chat_messages"]
+whiteboard_entries_collection = database["whiteboard_entries"]
 
 
 async def create_indexes() -> None:
@@ -36,6 +37,9 @@ async def create_indexes() -> None:
     await chat_messages_collection.create_index([("session_id", 1), ("timestamp", 1)])
     await chat_messages_collection.create_index("sender_id")
     await chat_messages_collection.create_index("date_created")
+    await whiteboard_entries_collection.create_index("whiteboard_id", unique=True)
+    await whiteboard_entries_collection.create_index([("session_id", 1), ("timestamp", 1)])
+    await whiteboard_entries_collection.create_index("user_id")
 
 
 
