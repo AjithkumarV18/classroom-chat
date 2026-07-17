@@ -9,6 +9,7 @@ export const routePermissions = {
   classroom: ["Student", "Teacher", "Admin"],
   virtualClassroom: ["Student", "Teacher", "Admin"],
   attendance: ["Student", "Teacher", "Admin"],
+  attendanceReports: ["Student", "Teacher", "Admin"],
 };
 
 export function saveAuthSession(authData) {

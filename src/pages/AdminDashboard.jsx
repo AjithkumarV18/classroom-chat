@@ -28,6 +28,11 @@ const menuItems = [
     description: "Monitor attendance and review student participation records.",
     path: "/attendance",
   },
+  {
+    label: "Attendance Reports",
+    description: "View attendance summaries and export report data.",
+    path: "/attendance-reports",
+  },
 ];
 
 function AdminDashboard() {

@@ -208,5 +208,46 @@ export const authApi = {
     }),
 };
 
+export const attendanceReportsApi = {
+  summary: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, value]) => value)
+    ).toString();
+    return request(`/attendance/reports/summary${query ? `?${query}` : ""}`);
+  },
+  bySession: (sessionId) =>
+    request(`/attendance/reports/session/${encodeURIComponent(sessionId)}`),
+  byStudent: (studentId, params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, value]) => value)
+    ).toString();
+    return request(
+      `/attendance/reports/student/${encodeURIComponent(studentId)}${query ? `?${query}` : ""}`
+    );
+  },
+  exportCsv: async (params = {}) => {
+    const query = new URLSearchParams({
+      ...params,
+      format: "csv",
+    }).toString();
 
+    const response = await fetch(`${API_BASE_URL}/attendance/reports/export?${query}`, {
+      headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+    });
+
+    if (!response.ok) {
+      throw new Error("Unable to export attendance report.");
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `attendance-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(downloadUrl);
+  },
+};
 

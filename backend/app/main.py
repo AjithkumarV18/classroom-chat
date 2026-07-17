@@ -16,6 +16,7 @@ from app.routes.trainer_sessions import router as trainer_sessions_router
 from app.routes.whiteboard import router as whiteboard_router
 from app.database import attendance_collection
 from app.config import settings
+from app.routes.attendance_reports import router as attendance_reports_router
 
 app = FastAPI(title="Classroom Chat API", version="1.0.0")
 
@@ -60,6 +61,7 @@ app.include_router(trainer_sessions_router, prefix="/api")
 app.include_router(recordings_router, prefix="/api")
 app.include_router(session_recordings_router, prefix="/api")
 app.include_router(whiteboard_router, prefix="/api")
+app.include_router(attendance_reports_router, prefix="/api")
 
 
 

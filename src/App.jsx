@@ -13,6 +13,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import Attendance from "./pages/Attendance";
 import AccessDenied from "./pages/AccessDenied";
 import ProtectedRoute from "./auth/ProtectedRoute";
+import AttendanceReports from "./pages/AttendanceReports";
 import { routePermissions } from "./auth/auth";
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
       <Route path="/attendance" element={<ProtectedRoute allowedRoles={routePermissions.attendance}><Attendance /></ProtectedRoute>} />
       <Route path="/virtual-classroom" element={<ProtectedRoute allowedRoles={routePermissions.virtualClassroom}><VirtualClassroom /></ProtectedRoute>} />
       <Route path="/classroom" element={<ProtectedRoute allowedRoles={routePermissions.classroom}><DigitalClassroom /></ProtectedRoute>} />
+      <Route path="/attendance-reports" element={<ProtectedRoute allowedRoles={routePermissions.attendanceReports}><AttendanceReports /></ProtectedRoute>} />
     </Routes>
   );
 }
