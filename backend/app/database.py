@@ -13,6 +13,10 @@ managed_sessions_collection = database["managed_sessions"]
 attendance_collection = database["attendance"]
 chat_messages_collection = database["chat_messages"]
 whiteboard_entries_collection = database["whiteboard_entries"]
+live_session_state_collection = database["live_session_state"]
+live_participants_collection = database["live_participants"]
+activity_logs_collection = database["activity_logs"]
+notifications_collection = database["notifications"]
 
 
 async def create_indexes() -> None:
@@ -40,6 +44,19 @@ async def create_indexes() -> None:
     await whiteboard_entries_collection.create_index("whiteboard_id", unique=True)
     await whiteboard_entries_collection.create_index([("session_id", 1), ("timestamp", 1)])
     await whiteboard_entries_collection.create_index("user_id")
+    await live_session_state_collection.create_index("session_id", unique=True)
+    await live_participants_collection.create_index([("session_id", 1), ("user_id", 1)], unique=True)
+    await live_participants_collection.create_index("session_id")
+    await live_participants_collection.create_index("status")
+    await activity_logs_collection.create_index([("session_id", 1), ("timestamp", -1)])
+    await activity_logs_collection.create_index("event_type")
+    await notifications_collection.create_index("notification_id", unique=True)
+    await notifications_collection.create_index("sender_id")
+    await notifications_collection.create_index("recipient_type")
+    await notifications_collection.create_index("recipient_id")
+    await notifications_collection.create_index("priority")
+    await notifications_collection.create_index("notification_status")
+    await notifications_collection.create_index("created_at")
 
 
 

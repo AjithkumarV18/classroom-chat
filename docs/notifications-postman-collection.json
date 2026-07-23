@@ -1,0 +1,47 @@
+{
+  "info": {
+    "name": "Classroom Chat - Notification Management API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" },
+    { "key": "notificationId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Demo Login - Admin",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const data = pm.response.json();", "pm.collectionVariables.set('token', data.access_token);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"Admin\"\n}" }, "url": "{{baseUrl}}/api/auth/demo-login" }
+    },
+    {
+      "name": "Create Notification",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const data = pm.response.json();", "pm.collectionVariables.set('notificationId', data.id);"] } }],
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Live class reminder\",\n  \"message\": \"Your AI class starts at 10 AM.\",\n  \"recipient_type\": \"All\",\n  \"priority\": \"High\",\n  \"notification_status\": \"Sent\"\n}" }, "url": "{{baseUrl}}/api/notifications" }
+    },
+    {
+      "name": "Get All Notifications",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/api/notifications?page=1&page_size=20" }
+    },
+    {
+      "name": "Get My Notifications",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/api/notifications/my?page=1&page_size=20" }
+    },
+    {
+      "name": "Get Notification Details",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/api/notifications/{{notificationId}}" }
+    },
+    {
+      "name": "Mark As Read",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "PUT", "url": "{{baseUrl}}/api/notifications/{{notificationId}}/read" }
+    },
+    {
+      "name": "Update Notification",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"priority\": \"Medium\",\n  \"notification_status\": \"Active\"\n}" }, "url": "{{baseUrl}}/api/notifications/{{notificationId}}" }
+    },
+    {
+      "name": "Soft Delete Notification",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "DELETE", "url": "{{baseUrl}}/api/notifications/{{notificationId}}" }
+    }
+  ]
+}

@@ -80,7 +80,7 @@ function TrainerDashboard() {
   };
 
   const handleStartSession = (sessionId) => {
-    navigate(`/classroom?sessionId=${encodeURIComponent(sessionId)}`);
+    navigate(`/virtual-classroom?sessionId=${encodeURIComponent(sessionId)}`);
   };
 
   return (

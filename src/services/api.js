@@ -190,6 +190,40 @@ export const whiteboardApi = {
       method: "DELETE",
     }),
 };
+
+export const notificationsApi = {
+  create: (payload) =>
+    request("/notifications", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  list: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== "" && value !== "All")
+    ).toString();
+    return request(`/notifications${query ? `?${query}` : ""}`);
+  },
+  my: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, value]) => value !== undefined && value !== "" && value !== "All")
+    ).toString();
+    return request(`/notifications/my${query ? `?${query}` : ""}`);
+  },
+  get: (id) => request(`/notifications/${encodeURIComponent(id)}`),
+  markRead: (id) =>
+    request(`/notifications/${encodeURIComponent(id)}/read`, {
+      method: "PUT",
+    }),
+  update: (id, payload) =>
+    request(`/notifications/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
+  delete: (id) =>
+    request(`/notifications/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    }),
+};
 export const authApi = {
   register: (payload) =>
     request("/auth/register", {
@@ -249,5 +283,19 @@ export const attendanceReportsApi = {
     link.remove();
     window.URL.revokeObjectURL(downloadUrl);
   },
+};
+export const liveSessionsApi = {
+  start: (sessionId) =>
+    request(`/live-sessions/${encodeURIComponent(sessionId)}/start`, { method: "POST" }),
+  end: (sessionId) =>
+    request(`/live-sessions/${encodeURIComponent(sessionId)}/end`, { method: "POST" }),
+  lock: (sessionId, locked = true) =>
+    request(`/live-sessions/${encodeURIComponent(sessionId)}/lock?locked=${locked}`, { method: "POST" }),
+  participants: (sessionId, search) => {
+    const q = search ? `?search=${encodeURIComponent(search)}` : "";
+    return request(`/live-sessions/${encodeURIComponent(sessionId)}/participants${q}`);
+  },
+  activityLogs: (sessionId) =>
+    request(`/live-sessions/${encodeURIComponent(sessionId)}/activity-logs`),
 };
 

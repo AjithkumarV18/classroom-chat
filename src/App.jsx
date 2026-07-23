@@ -1,4 +1,4 @@
-﻿import { Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -14,6 +14,7 @@ import Attendance from "./pages/Attendance";
 import AccessDenied from "./pages/AccessDenied";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import AttendanceReports from "./pages/AttendanceReports";
+import Notifications from "./pages/Notifications";
 import { routePermissions } from "./auth/auth";
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
       <Route path="/virtual-classroom" element={<ProtectedRoute allowedRoles={routePermissions.virtualClassroom}><VirtualClassroom /></ProtectedRoute>} />
       <Route path="/classroom" element={<ProtectedRoute allowedRoles={routePermissions.classroom}><DigitalClassroom /></ProtectedRoute>} />
       <Route path="/attendance-reports" element={<ProtectedRoute allowedRoles={routePermissions.attendanceReports}><AttendanceReports /></ProtectedRoute>} />
+      <Route path="/notifications" element={<ProtectedRoute allowedRoles={routePermissions.notifications}><Notifications /></ProtectedRoute>} />
     </Routes>
   );
 }

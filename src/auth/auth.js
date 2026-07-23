@@ -1,4 +1,4 @@
-﻿export const roles = ["Student", "Teacher", "Employer", "Employee", "Admin"];
+export const roles = ["Student", "Teacher", "Employer", "Employee", "Admin"];
 
 export const routePermissions = {
   dashboard: roles,
@@ -10,6 +10,7 @@ export const routePermissions = {
   virtualClassroom: ["Student", "Teacher", "Admin"],
   attendance: ["Student", "Teacher", "Admin"],
   attendanceReports: ["Student", "Teacher", "Admin"],
+  notifications: ["Student", "Teacher", "Admin"],
 };
 
 export function saveAuthSession(authData) {
