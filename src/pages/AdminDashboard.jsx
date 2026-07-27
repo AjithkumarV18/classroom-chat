@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { notificationsApi } from "../services/api";
 import "./AdminDashboard.css";
@@ -13,7 +13,7 @@ const menuItems = [
     label: "Recordings",
     description: "Upload and manage recorded class sessions.",
     path: "/recordings",
-  },
+  },  
   {
     label: "Session Recordings",
     description: "Play, download, and delete recorded sessions.",
