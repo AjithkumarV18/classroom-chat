@@ -17,6 +17,7 @@ live_session_state_collection = database["live_session_state"]
 live_participants_collection = database["live_participants"]
 activity_logs_collection = database["activity_logs"]
 notifications_collection = database["notifications"]
+feedback_collection = database["feedback"]
 
 
 async def create_indexes() -> None:
@@ -57,6 +58,12 @@ async def create_indexes() -> None:
     await notifications_collection.create_index("priority")
     await notifications_collection.create_index("notification_status")
     await notifications_collection.create_index("created_at")
+    await feedback_collection.create_index("feedback_id", unique=True)
+    await feedback_collection.create_index([("session_id", 1), ("student_id", 1)], unique=True)
+    await feedback_collection.create_index("session_id")
+    await feedback_collection.create_index("trainer_id")
+    await feedback_collection.create_index("rating")
+    await feedback_collection.create_index("created_at")
 
 
 

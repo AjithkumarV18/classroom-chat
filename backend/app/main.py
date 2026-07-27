@@ -20,6 +20,7 @@ from app.routes.attendance_reports import router as attendance_reports_router
 from app.routes.websocket import router as websocket_router
 from app.routes.live_sessions import router as live_sessions_router
 from app.routes.notifications import router as notifications_router
+from app.routes.feedback import router as feedback_router
 
 app = FastAPI(title="Classroom Chat API", version="1.0.0")
 
@@ -68,6 +69,7 @@ app.include_router(attendance_reports_router, prefix="/api")
 app.include_router(websocket_router, prefix="/api")
 app.include_router(live_sessions_router, prefix="/api")
 app.include_router(notifications_router, prefix="/api")
+app.include_router(feedback_router, prefix="/api")
 
 
 

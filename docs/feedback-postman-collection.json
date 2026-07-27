@@ -1,0 +1,36 @@
+{
+  "info": {
+    "name": "Classroom Chat - Session Feedback API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" },
+    { "key": "sessionId", "value": "SES-260713-ABC123" },
+    { "key": "trainerId", "value": "demo-teacher" }
+  ],
+  "item": [
+    {
+      "name": "Demo Login - Student",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const data = pm.response.json();", "pm.collectionVariables.set('token', data.access_token);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"Student\"\n}" }, "url": "{{baseUrl}}/api/auth/demo-login" }
+    },
+    {
+      "name": "Submit Feedback",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"session_id\": \"{{sessionId}}\",\n  \"student_id\": \"demo-student\",\n  \"trainer_id\": \"{{trainerId}}\",\n  \"rating\": 5,\n  \"review\": \"Great session with clear examples.\",\n  \"tags\": [\"Excellent\"]\n}" }, "url": "{{baseUrl}}/api/feedback" }
+    },
+    {
+      "name": "Demo Login - Teacher",
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const data = pm.response.json();", "pm.collectionVariables.set('token', data.access_token);"] } }],
+      "request": { "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"role\": \"Teacher\"\n}" }, "url": "{{baseUrl}}/api/auth/demo-login" }
+    },
+    {
+      "name": "Get Feedback By Session",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/api/feedback/session/{{sessionId}}?page=1&page_size=20" }
+    },
+    {
+      "name": "Get Trainer Feedback",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/api/feedback/trainer/{{trainerId}}?page=1&page_size=20" }
+    }
+  ]
+}
