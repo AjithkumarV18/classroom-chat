@@ -295,7 +295,11 @@ function SessionManagement() {
             ) : (
               <div className="managed-session-empty">
                 <h3>No sessions found</h3>
-                <p>Add a new session or adjust your search and filters.</p>
+                <p>
+                  {isStudent
+                    ? "No notified sessions are available for your assigned batch."
+                    : "Add a new session or adjust your search and filters."}
+                </p>
               </div>
             )}
           </div>
