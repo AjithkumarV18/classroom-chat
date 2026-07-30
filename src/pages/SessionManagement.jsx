@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { managedSessionsApi } from "../services/api";
+import { getAuthUser } from "../auth/auth";
+import { managedSessionsApi, trainerSessionsApi } from "../services/api";
 import "./SessionManagement.css";
 
 const emptyForm = {
@@ -17,6 +18,7 @@ const statusOptions = ["Upcoming", "Live", "Completed"];
 
 function SessionManagement() {
   const navigate = useNavigate();
+  const isStudent = getAuthUser()?.role === "Student";
   const [sessions, setSessions] = useState([]);
   const [formValues, setFormValues] = useState(emptyForm);
   const [editingSession, setEditingSession] = useState(null);
@@ -46,8 +48,10 @@ function SessionManagement() {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      const response = await managedSessionsApi.list();
-      setSessions(response.map(mapSessionFromApi));
+      const response = isStudent
+        ? await trainerSessionsApi.list()
+        : await managedSessionsApi.list();
+      setSessions(response.map(isStudent ? mapStudentSessionFromApi : mapSessionFromApi));
     } catch (error) {
       setErrorMessage(error.message || "Unable to load sessions.");
     } finally {
@@ -147,14 +151,18 @@ function SessionManagement() {
         <header className="session-management-header">
           <div>
             <p>Session Management</p>
-            <h1>Manage Scheduled Sessions</h1>
-            <span>Create, update, filter, and join virtual classroom sessions.</span>
+            <h1>{isStudent ? "My Scheduled Sessions" : "Manage Scheduled Sessions"}</h1>
+            <span>
+              {isStudent
+                ? "View and join live classroom sessions assigned to your batch."
+                : "Create, update, filter, and join virtual classroom sessions."}
+            </span>
           </div>
         </header>
 
         {errorMessage ? <p className="session-management-error">{errorMessage}</p> : null}
 
-        <section className="session-form-panel" aria-labelledby="session-form-title">
+        {!isStudent ? <section className="session-form-panel" aria-labelledby="session-form-title">
           <div className="session-form-panel__header">
             <h2 id="session-form-title">{editingSession ? "Edit Session" : "Add New Session"}</h2>
             {editingSession ? (
@@ -201,7 +209,7 @@ function SessionManagement() {
               {editingSession ? "Update Session" : "Add Session"}
             </button>
           </form>
-        </section>
+        </section> : null}
 
         <section className="session-filter-panel" aria-label="Search and filter sessions">
           <label>
@@ -260,6 +268,7 @@ function SessionManagement() {
                     <dl>
                       <div><dt>Session ID</dt><dd>{session.sessionId}</dd></div>
                       <div><dt>Trainer Name</dt><dd>{session.trainerName}</dd></div>
+                      {session.batchName ? <div><dt>Batch</dt><dd>{session.batchName}</dd></div> : null}
                       <div><dt>Date</dt><dd>{session.date}</dd></div>
                       <div><dt>Time</dt><dd>{session.time}</dd></div>
                       <div><dt>Duration</dt><dd>{session.duration}</dd></div>
@@ -270,12 +279,16 @@ function SessionManagement() {
                     <button className="join-session-button" onClick={() => handleJoinSession(session)} type="button">
                       Join Session
                     </button>
-                    <button className="session-secondary-button" onClick={() => handleEdit(session)} type="button">
-                      Edit
-                    </button>
-                    <button className="delete-session-button" onClick={() => handleDelete(session)} type="button">
-                      Delete
-                    </button>
+                    {!isStudent ? (
+                      <>
+                        <button className="session-secondary-button" onClick={() => handleEdit(session)} type="button">
+                          Edit
+                        </button>
+                        <button className="delete-session-button" onClick={() => handleDelete(session)} type="button">
+                          Delete
+                        </button>
+                      </>
+                    ) : null}
                   </div>
                 </article>
               ))
@@ -303,6 +316,21 @@ function mapSessionFromApi(session) {
     duration: session.duration,
     description: session.description,
     status: session.status,
+  };
+}
+
+function mapStudentSessionFromApi(session) {
+  return {
+    objectId: session.id,
+    sessionId: session.room_id,
+    sessionName: `Live Class - ${session.batch_name}`,
+    trainerName: "Assigned Trainer",
+    batchName: session.batch_name,
+    date: session.scheduled_date,
+    time: session.scheduled_time,
+    duration: "Live session",
+    description: `Live classroom for ${session.batch_name}.`,
+    status: "Upcoming",
   };
 }
 

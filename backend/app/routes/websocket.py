@@ -1,24 +1,30 @@
-from datetime import datetime, timezone
+import asyncio
+from datetime import timedelta
 from typing import Any
 
-from bson import ObjectId
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+from bson import ObjectId
 
-from app.live.connection_manager import manager
+from app.config import settings
+from app.database import live_participants_collection, live_session_state_collection, managed_sessions_collection, whiteboard_entries_collection
+from app.live.connection_manager import encode_event, manager
 from app.live.helpers import (
     DEFAULT_PERMISSIONS,
+    can_join_session,
     get_or_create_session_state,
     is_trainer,
     list_participants,
     log_activity,
+    log_recovery,
     serialize_participant,
     session_exists,
+    session_restore_snapshot,
     decode_ws_token,
     utc_now,
 )
-from app.database import live_participants_collection
 
 router = APIRouter(tags=["websocket"])
+recovery_tasks: dict[str, asyncio.Task] = {}
 
 
 async def broadcast_state(session_id: str) -> None:
@@ -30,17 +36,91 @@ async def broadcast_state(session_id: str) -> None:
     })
 
 
+async def auto_end_after_recovery_timeout(session_id: str, trainer_id: str) -> None:
+    await asyncio.sleep(settings.live_session_recovery_timeout_seconds)
+    state = await live_session_state_collection.find_one({"session_id": session_id})
+    if not state or state.get("recovery_status") != "pending" or state.get("recovery_trainer_id") != trainer_id:
+        return
+    now = utc_now()
+    await live_session_state_collection.update_one(
+        {"session_id": session_id},
+        {"$set": {
+            "status": "ended",
+            "ended_at": now,
+            "recovery_status": "expired",
+            "updated_at": now,
+        }},
+    )
+    await managed_sessions_collection.update_one({"session_id": session_id}, {"$set": {"status": "Completed"}})
+    await log_recovery(session_id, "trainer_recovery_timeout", trainer_id, {"timeout_seconds": settings.live_session_recovery_timeout_seconds})
+    await manager.broadcast(session_id, {
+        "type": "session_ended",
+        "payload": {"reason": "trainer_recovery_timeout", "ended_at": now.isoformat()},
+    })
+
+
+async def start_trainer_recovery(session_id: str, user: dict) -> None:
+    now = utc_now()
+    deadline = now + timedelta(seconds=settings.live_session_recovery_timeout_seconds)
+    await live_session_state_collection.update_one(
+        {"session_id": session_id},
+        {"$set": {
+            "recovery_status": "pending",
+            "recovery_deadline": deadline,
+            "recovery_trainer_id": user["id"],
+            "updated_at": now,
+        }},
+        upsert=True,
+    )
+    await log_recovery(session_id, "trainer_disconnected", user["id"], {"recovery_deadline": deadline.isoformat()})
+    task = recovery_tasks.pop(session_id, None)
+    if task:
+        task.cancel()
+    recovery_tasks[session_id] = asyncio.create_task(auto_end_after_recovery_timeout(session_id, user["id"]))
+    await manager.broadcast(session_id, {
+        "type": "trainer_reconnecting",
+        "payload": {
+            "trainer_id": user["id"],
+            "timeout_seconds": settings.live_session_recovery_timeout_seconds,
+            "recovery_deadline": deadline.isoformat(),
+        },
+    })
+
+
+async def complete_trainer_recovery(session_id: str, user: dict, websocket: WebSocket) -> None:
+    task = recovery_tasks.pop(session_id, None)
+    if task:
+        task.cancel()
+    now = utc_now()
+    await live_session_state_collection.update_one(
+        {"session_id": session_id},
+        {"$set": {
+            "recovery_status": "none",
+            "recovery_deadline": None,
+            "recovery_trainer_id": None,
+            "updated_at": now,
+        }},
+    )
+    await log_recovery(session_id, "trainer_reconnected", user["id"])
+    snapshot = await session_restore_snapshot(session_id)
+    await websocket.send_text(encode_event({"type": "session_recovered", "payload": snapshot}))
+    await manager.broadcast(session_id, {
+        "type": "trainer_reconnected",
+        "payload": {"trainer_id": user["id"], "restored_at": now.isoformat()},
+    }, exclude_user_id=user["id"])
+
+
 async def handle_join(session_id: str, user: dict, websocket: WebSocket) -> None:
     state = await get_or_create_session_state(session_id)
     existing = await live_participants_collection.find_one({"session_id": session_id, "user_id": user["id"]})
 
     if existing and existing.get("status") == "removed" and not state.get("allow_rejoin_after_removal"):
-        await websocket.send_json({"type": "error", "payload": {"message": "You were removed and cannot rejoin."}})
+        await websocket.send_text(encode_event({"type": "error", "payload": {"message": "You were removed and cannot rejoin."}}))
         await websocket.close(code=4403)
         return
 
     if state.get("locked") and not is_trainer(user["role"]) and not (existing and existing.get("status") == "active"):
-        await websocket.send_json({"type": "error", "payload": {"message": "Session is locked."}})
+        await websocket.send_text(encode_event({"type": "error", "payload": {"message": "Session is locked."}}))
         await websocket.close(code=4403)
         return
 
@@ -57,9 +137,9 @@ async def handle_join(session_id: str, user: dict, websocket: WebSocket) -> None
         "user_id": user["id"],
         "role": user["role"],
         "status": status,
-        "hand_status": "none",
-        "mic_muted": True,
-        "camera_on": False,
+        "hand_status": existing.get("hand_status", "none") if existing else "none",
+        "mic_muted": existing.get("mic_muted", True) if existing else True,
+        "camera_on": existing.get("camera_on", False) if existing else False,
         "permissions": existing.get("permissions", DEFAULT_PERMISSIONS.copy()) if existing else DEFAULT_PERMISSIONS.copy(),
         "joined_at": existing.get("joined_at", now) if existing else now,
         "updated_at": now,
@@ -73,18 +153,22 @@ async def handle_join(session_id: str, user: dict, websocket: WebSocket) -> None
     await manager.connect(session_id, user["id"], websocket)
     await log_activity(session_id, "participant_joined", user["id"], user.get("email", user["id"]))
 
+    refreshed_state = await get_or_create_session_state(session_id)
+    if is_trainer(user["role"]) and refreshed_state.get("recovery_status") == "pending":
+        await complete_trainer_recovery(session_id, user, websocket)
+
     participant = await serialize_participant(await live_participants_collection.find_one(
         {"session_id": session_id, "user_id": user["id"]}
     ))
 
-    await websocket.send_json({
+    await websocket.send_text(encode_event({
         "type": "session_snapshot",
         "payload": {
-            "session_state": state,
+            "session_state": await get_or_create_session_state(session_id),
             "you": participant,
             "participants": await list_participants(session_id),
         },
-    })
+    }))
 
     if status == "waiting":
         await manager.broadcast(session_id, {"type": "waiting_participant", "payload": participant}, exclude_user_id=user["id"])
@@ -101,6 +185,14 @@ async def live_session_ws(websocket: WebSocket, session_id: str, token: str = Qu
         return
 
     user = decode_ws_token(token)
+    if not await can_join_session(session_id, user):
+        await websocket.accept()
+        await websocket.send_text(encode_event({
+            "type": "error",
+            "payload": {"message": "This session is not assigned to your batch."},
+        }))
+        await websocket.close(code=4403)
+        return
     await handle_join(session_id, user, websocket)
 
     try:
@@ -113,8 +205,11 @@ async def live_session_ws(websocket: WebSocket, session_id: str, token: str = Qu
             {"$set": {"status": "disconnected", "updated_at": utc_now()}},
         )
         manager.disconnect(session_id, user["id"])
-        await log_activity(session_id, "participant_left", user["id"], user.get("email", user["id"]))
-        await manager.broadcast(session_id, {"type": "notification", "payload": {"message": f"{user.get('email')} left"}})
+        if is_trainer(user["role"]):
+            await start_trainer_recovery(session_id, user)
+        else:
+            await log_activity(session_id, "participant_left", user["id"], user.get("email", user["id"]))
+            await manager.broadcast(session_id, {"type": "notification", "payload": {"message": f"{user.get('email')} left"}})
         await broadcast_state(session_id)
 
 
@@ -122,6 +217,48 @@ async def dispatch_event(session_id: str, actor: dict, data: dict[str, Any]) -> 
     event_type = data.get("type")
     payload = data.get("payload", {})
     trainer = is_trainer(actor["role"])
+
+    if event_type == "WHITEBOARD_DRAW":
+        stroke = payload.get("stroke")
+        if not isinstance(stroke, dict) or not isinstance(stroke.get("points"), list) or len(stroke["points"]) < 2:
+            await manager.send_to_user(session_id, actor["id"], {"type": "error", "payload": {"message": "Invalid whiteboard stroke."}})
+            return
+        doc = await live_participants_collection.find_one({"session_id": session_id, "user_id": actor["id"]})
+        permissions = doc.get("permissions", DEFAULT_PERMISSIONS) if doc else DEFAULT_PERMISSIONS
+        if not trainer and not permissions.get("can_chat", True):
+            await manager.send_to_user(session_id, actor["id"], {"type": "error", "payload": {"message": "Whiteboard drawing is not allowed."}})
+            return
+        now = utc_now()
+        entry = {
+            "whiteboard_id": f"WB-{str(ObjectId()).upper()}",
+            "session_id": session_id,
+            "user_id": actor["id"],
+            "drawing_data": stroke,
+            "tool_type": "Eraser" if stroke.get("tool") == "eraser" else "Pen",
+            "color": stroke.get("color", "#2563eb"),
+            "stroke_width": int(stroke.get("strokeWidth", 4)),
+            "timestamp": now,
+        }
+        await whiteboard_entries_collection.insert_one(entry)
+        await manager.broadcast(session_id, {
+            "type": "WHITEBOARD_DRAW",
+            "payload": {
+                "stroke": stroke,
+                "user_id": actor["id"],
+                "whiteboard_id": entry["whiteboard_id"],
+                "timestamp": now.isoformat(),
+            },
+        })
+        return
+
+    if event_type == "WHITEBOARD_CLEAR" and trainer:
+        await whiteboard_entries_collection.delete_many({"session_id": session_id})
+        await manager.broadcast(session_id, {"type": "WHITEBOARD_CLEAR", "payload": {"session_id": session_id}})
+        return
+
+    if event_type in ("WHITEBOARD_UNDO", "WHITEBOARD_REDO", "WHITEBOARD_STATE_REQUEST", "WHITEBOARD_STATE_SYNC"):
+        await manager.broadcast(session_id, {"type": event_type, "payload": payload}, exclude_user_id=actor["id"])
+        return
 
     # --- Raise Hand (Task 1) ---
     if event_type == "raise_hand":

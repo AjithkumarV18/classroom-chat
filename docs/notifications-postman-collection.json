@@ -6,7 +6,9 @@
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8000" },
     { "key": "token", "value": "" },
-    { "key": "notificationId", "value": "" }
+    { "key": "notificationId", "value": "" },
+    { "key": "sessionId", "value": "TEST-ROOM-20260730093349" },
+    { "key": "batchId", "value": "TEST-BATCH-20260730093349" }
   ],
   "item": [
     {
@@ -16,8 +18,8 @@
     },
     {
       "name": "Create Notification",
-      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const data = pm.response.json();", "pm.collectionVariables.set('notificationId', data.id);"] } }],
-      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Live class reminder\",\n  \"message\": \"Your AI class starts at 10 AM.\",\n  \"recipient_type\": \"All\",\n  \"priority\": \"High\",\n  \"notification_status\": \"Sent\"\n}" }, "url": "{{baseUrl}}/api/notifications" }
+      "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["const data = pm.response.json();", "pm.collectionVariables.set('notificationId', data.notification_id);"] } }],
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"session_id\": \"{{sessionId}}\",\n  \"batch_id\": \"{{batchId}}\",\n  \"title\": \"TEST - Live Class Started\",\n  \"message\": \"Your live class has started. Please join the session.\",\n  \"target_audience\": \"Batch\",\n  \"priority\": \"High\"\n}" }, "url": "{{baseUrl}}/api/notifications" }
     },
     {
       "name": "Get All Notifications",
@@ -36,8 +38,16 @@
       "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "PUT", "url": "{{baseUrl}}/api/notifications/{{notificationId}}/read" }
     },
     {
+      "name": "Unread Count",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "GET", "url": "{{baseUrl}}/api/notifications/unread-count" }
+    },
+    {
+      "name": "Mark All As Read",
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "PATCH", "url": "{{baseUrl}}/api/notifications/read-all" }
+    },
+    {
       "name": "Update Notification",
-      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"priority\": \"Medium\",\n  \"notification_status\": \"Active\"\n}" }, "url": "{{baseUrl}}/api/notifications/{{notificationId}}" }
+      "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{\n  \"title\": \"TEST - Live Class Started (Updated)\",\n  \"priority\": \"Emergency\"\n}" }, "url": "{{baseUrl}}/api/notifications/{{notificationId}}" }
     },
     {
       "name": "Soft Delete Notification",

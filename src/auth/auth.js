@@ -5,7 +5,7 @@ export const routePermissions = {
   trainer: ["Teacher", "Admin"],
   recordings: ["Teacher", "Admin"],
   sessionRecordings: roles,
-  sessionManagement: ["Teacher", "Admin"],
+  sessionManagement: ["Student", "Teacher", "Admin"],
   classroom: ["Student", "Teacher", "Admin"],
   virtualClassroom: ["Student", "Teacher", "Admin"],
   attendance: ["Student", "Teacher", "Admin"],

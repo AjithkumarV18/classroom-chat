@@ -95,7 +95,7 @@ async def demo_login(payload: DemoLoginRequest) -> TokenResponse:
         "_id": f"demo-{role.lower()}",
         "first_name": role,
         "last_name": "Demo",
-        "email": f"{role.lower()}@demo.local",
+        "email": f"{role.lower()}@demo.example.com",
         "role": role,
     }
     token = create_access_token(

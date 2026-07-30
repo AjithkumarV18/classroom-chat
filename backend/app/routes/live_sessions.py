@@ -26,7 +26,15 @@ async def start_session(session_id: str, user=Depends(require_roles("Teacher", "
     now = utc_now()
     await live_session_state_collection.update_one(
         {"session_id": session_id},
-        {"$set": {"status": "live", "started_at": now, "ended_at": None, "updated_at": now}},
+        {"$set": {
+            "status": "live",
+            "started_at": now,
+            "ended_at": None,
+            "recovery_status": "none",
+            "recovery_deadline": None,
+            "recovery_trainer_id": None,
+            "updated_at": now,
+        }},
         upsert=True,
     )
     await managed_sessions_collection.update_one({"session_id": session_id}, {"$set": {"status": "Live"}})
@@ -42,7 +50,14 @@ async def end_session(session_id: str, user=Depends(require_roles("Teacher", "Ad
     now = utc_now()
     await live_session_state_collection.update_one(
         {"session_id": session_id},
-        {"$set": {"status": "ended", "ended_at": now, "updated_at": now}},
+        {"$set": {
+            "status": "ended",
+            "ended_at": now,
+            "recovery_status": "none",
+            "recovery_deadline": None,
+            "recovery_trainer_id": None,
+            "updated_at": now,
+        }},
     )
     await managed_sessions_collection.update_one({"session_id": session_id}, {"$set": {"status": "Completed"}})
     await log_activity(session_id, "session_ended", user["id"], user["email"])

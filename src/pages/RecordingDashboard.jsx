@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import UploadRecordingModal from "../components/recordings/UploadRecordingModal";
-import { recordingsApi, sessionRecordingsApi, toApiUrl } from "../services/api";
+import { getAuthUser } from "../auth/auth";
+import { recordingsApi, sessionRecordingsApi } from "../services/api";
 import "./RecordingDashboard.css";
 
 function RecordingDashboard() {
@@ -25,9 +26,10 @@ function RecordingDashboard() {
       setIsLoading(true);
       setErrorMessage("");
       const response = await recordingsApi.list();
-      setRecordings(response.map(mapRecordingFromApi));
+      const items = Array.isArray(response) ? response : response.items || [];
+      setRecordings(items.map(mapRecordingFromApi));
     } catch (error) {
-      setErrorMessage(error.message || "Unable to load recordings.");
+      setErrorMessage(getFriendlyRecordingError(error));
     } finally {
       setIsLoading(false);
     }
@@ -36,22 +38,30 @@ function RecordingDashboard() {
   const handleUploadRecording = async (recording) => {
     try {
       setErrorMessage("");
+      const currentUser = getAuthUser();
+      const sessionId = getSessionId(recording.sessionName);
       const createdRecording = await recordingsApi.upload({
-        recordingId: recording.id,
-        sessionName: recording.sessionName,
+        sessionId,
+        batchId: recording.batchId || "Batch A",
+        trainerId: currentUser?.id || "demo-teacher",
         title: recording.title,
+        description: `Uploaded from ${recording.sessionName}`,
         duration: recording.duration,
         videoFile: recording.videoFile,
       });
 
-      await sessionRecordingsApi.create({
-        recording_id: createdRecording.recording_id,
-        session_name: createdRecording.session_name,
-        duration: createdRecording.duration,
-        video_url: createdRecording.video_url,
-        download_url: createdRecording.download_url,
-        video_file_name: createdRecording.video_file_name,
-      });
+      try {
+        await sessionRecordingsApi.create({
+          recording_id: createdRecording.recording_id,
+          session_name: createdRecording.session_name || createdRecording.session_id,
+          duration: createdRecording.duration || createdRecording.recording_duration,
+          video_url: createdRecording.video_url || createdRecording.video_file_url,
+          download_url: createdRecording.download_url || `/api/recordings/download/${createdRecording.recording_id}`,
+          video_file_name: createdRecording.video_file_name || createdRecording.video_file_url?.split("/").pop() || "recording.mp4",
+        });
+      } catch {
+        // The new backend stores playback metadata in recordings; the legacy session_recordings mirror is optional.
+      }
 
       setRecordings((currentRecordings) => [
         mapRecordingFromApi(createdRecording),
@@ -60,6 +70,23 @@ function RecordingDashboard() {
       setIsUploadModalOpen(false);
     } catch (error) {
       setErrorMessage(error.message || "Unable to upload recording.");
+    }
+  };
+
+  const handleDownloadRecording = async (recording) => {
+    try {
+      setErrorMessage("");
+      const blob = await recordingsApi.download(recording.id);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = recording.videoFileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to download recording.");
     }
   };
 
@@ -137,7 +164,9 @@ function RecordingDashboard() {
                     <span>Uploaded</span>
                     <strong>{formatUploadDateTime(recording.uploadedAt)}</strong>
                     {recording.downloadUrl ? (
-                      <a href={toApiUrl(recording.downloadUrl)}>Download</a>
+                      <button type="button" onClick={() => handleDownloadRecording(recording)}>
+                        Download
+                      </button>
                     ) : null}
                   </div>
                 </article>
@@ -165,14 +194,25 @@ function mapRecordingFromApi(recording) {
   return {
     objectId: recording.id,
     id: recording.recording_id,
-    sessionName: recording.session_name,
-    title: recording.title,
-    videoFileName: recording.video_file_name,
-    duration: recording.duration,
-    videoUrl: recording.video_url,
-    downloadUrl: recording.download_url,
-    uploadedAt: recording.uploaded_at,
+    sessionName: recording.session_name || recording.session_id,
+    title: recording.title || recording.recording_title,
+    videoFileName: recording.video_file_name || recording.video_file_url?.split("/").pop() || "Stored recording",
+    duration: recording.duration || recording.recording_duration,
+    videoUrl: recording.video_url || recording.video_file_url,
+    downloadUrl: recording.download_url || `/api/recordings/download/${recording.recording_id}`,
+    uploadedAt: recording.uploaded_at || recording.recording_date || recording.created_at,
   };
+}
+
+function getSessionId(sessionName) {
+  return sessionName.includes(" - ") ? sessionName.split(" - ")[0] : sessionName;
+}
+
+function getFriendlyRecordingError(error) {
+  if (error.message === "Failed to fetch") {
+    return "Backend is not reachable. Start FastAPI on http://localhost:8000, then refresh this page.";
+  }
+  return error.message || "Unable to load recordings.";
 }
 
 function formatUploadDate(uploadedAt) {

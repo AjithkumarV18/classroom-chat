@@ -1,7 +1,7 @@
 import { getAuthToken } from "../auth/auth";
 
-export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:8000";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || `${API_ORIGIN}/api`;
+export const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
 
 export function toApiUrl(path) {
   if (!path) return "";
@@ -30,6 +30,18 @@ async function multipartRequest(path, formData) {
   });
 
   return parseResponse(response);
+}
+
+async function blobRequest(path) {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: getAuthToken() ? { Authorization: `Bearer ${getAuthToken()}` } : {},
+  });
+
+  if (!response.ok) {
+    await parseResponse(response);
+  }
+
+  return response.blob();
 }
 
 async function parseResponse(response) {
@@ -71,6 +83,10 @@ export const trainerSessionsApi = {
       method: "PUT",
       body: JSON.stringify(payload),
     }),
+  notify: (id) =>
+    request(`/trainer-sessions/${id}/notify`, {
+      method: "POST",
+    }),
   delete: (id) =>
     request(`/trainer-sessions/${id}`, {
       method: "DELETE",
@@ -86,13 +102,26 @@ export const recordingsApi = {
     }),
   upload: (payload) => {
     const formData = new FormData();
-    formData.append("recording_id", payload.recordingId);
-    formData.append("session_name", payload.sessionName);
-    formData.append("title", payload.title);
-    formData.append("duration", payload.duration);
+    formData.append("session_id", payload.sessionId);
+    formData.append("batch_id", payload.batchId);
+    formData.append("trainer_id", payload.trainerId);
+    formData.append("recording_title", payload.title);
+    formData.append("recording_description", payload.description || "");
+    formData.append("recording_duration", payload.duration);
+    formData.append("visibility", payload.visibility || "Public Batch");
     formData.append("video_file", payload.videoFile);
     return multipartRequest("/recordings/upload", formData);
   },
+  playback: (id) =>
+    request(`/recordings/${encodeURIComponent(id)}/playback`, {
+      method: "POST",
+    }),
+  trackView: (id, payload = {}) =>
+    request(`/recordings/${encodeURIComponent(id)}/view`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  download: (id) => blobRequest(`/recordings/download/${encodeURIComponent(id)}`),
   update: (id, payload) =>
     request(`/recordings/${id}`, {
       method: "PUT",
@@ -209,6 +238,7 @@ export const notificationsApi = {
     ).toString();
     return request(`/notifications/my${query ? `?${query}` : ""}`);
   },
+  unreadCount: () => request("/notifications/unread-count"),
   get: (id) => request(`/notifications/${encodeURIComponent(id)}`),
   markRead: (id) =>
     request(`/notifications/${encodeURIComponent(id)}/read`, {

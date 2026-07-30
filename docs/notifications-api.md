@@ -2,87 +2,83 @@
 
 Base URL: `http://localhost:8000`
 
-All endpoints require JWT authentication.
+FastAPI exposes interactive OpenAPI documentation at `/docs`. All notification
+HTTP endpoints require JWT bearer authentication.
 
 ## Roles
 
-- Admin: create, list all, view details, edit, mark read, soft delete.
-- Teacher: create, list all, view details, edit own notifications, mark read.
-- Student: view own notifications, mark read, filter read/unread.
+- Admin: create platform, batch, and classroom notifications; list all; update;
+  mark read; and soft delete.
+- Teacher: create notifications only for owned sessions/batches; list, update,
+  and delete only notifications they created.
+- Student: list assigned notifications and update only their own recipient read
+  state.
 
 ## Fields
 
-- `notification_id`
-- `title`
-- `message`
-- `sender_id`
-- `sender_role`
-- `recipient_type`: `All`, `Batch`, `User`
-- `recipient_id`
-- `batch_id`
-- `priority`: `Low`, `Medium`, `High`
-- `read_status`
-- `notification_status`: `Active`, `Draft`, `Sent`, `Deleted`
-- `created_at`
-- `updated_at`
+- Priorities: `Low`, `Medium`, `High`, `Emergency`
+- Target audiences: `All`, `Batch`, `LiveClassroom`
+- A `Batch` target requires `batch_id` and may include its matching `session_id`.
+- A `LiveClassroom` target requires `session_id`.
+- Recipient read and delivery state is stored in `notification_receipts`, not
+  as one shared notification flag.
 
 ## Endpoints
 
 ### POST `/api/notifications`
 
-Create notification. Teacher/Admin only.
+Teacher/Admin. Returns `201 Created`.
 
 ```json
 {
-  "title": "Live class reminder",
-  "message": "Your AI class starts at 10 AM.",
-  "recipient_type": "All",
+  "session_id": "ROOM-AI2048",
+  "batch_id": "AI Foundations - Batch A",
+  "title": "Live Class Started",
+  "message": "Your live class has started. Please join the session.",
   "priority": "High",
-  "notification_status": "Sent"
+  "target_audience": "Batch"
 }
 ```
 
 ### GET `/api/notifications`
 
-List all notifications. Teacher/Admin only.
+Authenticated. Admin sees all, Teacher sees their own, and Student sees only
+assigned recipient records.
 
-Query params:
-
-- `search`
-- `priority`
-- `recipient_type`
-- `status`
-- `start_date`
-- `end_date`
-- `page`
-- `page_size`
+Query parameters: `search`, `priority`, `recipient_type`, `read_status`,
+`unread_only`, `session_id`, `batch_id`, `start_date`, `end_date`, `sort`
+(`newest` or `oldest`), `page`, and `page_size`.
 
 ### GET `/api/notifications/my`
 
-List notifications for the logged-in user.
+Alias of the role-scoped list endpoint.
 
-Query params:
+### GET `/api/notifications/unread-count`
 
-- `search`
-- `priority`
-- `read_status`
-- `start_date`
-- `end_date`
-- `page`
-- `page_size`
+Returns `{ "unread_count": number }`.
+
+### PATCH `/api/notifications/read-all`
+
+Marks all recipient records assigned to the authenticated user as read.
 
 ### GET `/api/notifications/{id}`
 
-Get notification details.
+Returns one authorized, non-deleted notification.
 
-### PUT `/api/notifications/{id}/read`
+### PATCH or PUT `/api/notifications/{id}/read`
 
-Mark notification as read for the logged-in user.
+Marks only the authenticated user's recipient record as read.
 
 ### PUT `/api/notifications/{id}`
 
-Update notification. Teacher/Admin only.
+Teacher/Admin. Updates `title`, `message`, and/or `priority`.
 
 ### DELETE `/api/notifications/{id}`
 
-Soft delete notification. Admin only.
+Teacher may soft-delete their own notification; Admin may soft-delete any.
+
+### WebSocket `/api/notifications/ws`
+
+Query parameters: `token` and `channel`. Supported channels are `all`,
+`batch_<batchId>`, `classroom_<sessionId>`, and the authenticated user's
+`user_<userId>`. The event name is `NEW_NOTIFICATION`.

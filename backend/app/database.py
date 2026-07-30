@@ -2,7 +2,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 
 from app.config import settings
 
-client = AsyncIOMotorClient(settings.mongodb_uri)
+client = AsyncIOMotorClient(settings.mongodb_uri, tz_aware=True)
 database = client[settings.mongodb_db]
 users_collection = database["users"]
 password_resets_collection = database["password_resets"]
@@ -17,6 +17,8 @@ live_session_state_collection = database["live_session_state"]
 live_participants_collection = database["live_participants"]
 activity_logs_collection = database["activity_logs"]
 notifications_collection = database["notifications"]
+notification_receipts_collection = database["notification_receipts"]
+live_session_recovery_logs_collection = database["live_session_recovery_logs"]
 feedback_collection = database["feedback"]
 
 
@@ -27,7 +29,13 @@ async def create_indexes() -> None:
     await trainer_sessions_collection.create_index("room_id")
     await trainer_sessions_collection.create_index("created_at")
     await recordings_collection.create_index("recording_id")
-    await recordings_collection.create_index("uploaded_at")
+    await recordings_collection.create_index("session_id")
+    await recordings_collection.create_index("batch_id")
+    await recordings_collection.create_index("trainer_id")
+    await recordings_collection.create_index("recording_status")
+    await recordings_collection.create_index("visibility")
+    await recordings_collection.create_index("recording_date")
+    await recordings_collection.create_index("created_at")
     await session_recordings_collection.create_index("recording_id")
     await session_recordings_collection.create_index("uploaded_date")
     await managed_sessions_collection.create_index("session_id")
@@ -53,11 +61,18 @@ async def create_indexes() -> None:
     await activity_logs_collection.create_index("event_type")
     await notifications_collection.create_index("notification_id", unique=True)
     await notifications_collection.create_index("sender_id")
-    await notifications_collection.create_index("recipient_type")
-    await notifications_collection.create_index("recipient_id")
+    await notifications_collection.create_index("target_audience")
+    await notifications_collection.create_index("batch_id")
+    await notifications_collection.create_index("session_id")
     await notifications_collection.create_index("priority")
-    await notifications_collection.create_index("notification_status")
+    await notifications_collection.create_index("is_deleted")
     await notifications_collection.create_index("created_at")
+    await notification_receipts_collection.create_index([("notification_id", 1), ("user_id", 1)], unique=True)
+    await notification_receipts_collection.create_index("user_id")
+    await notification_receipts_collection.create_index("is_read")
+    await live_session_recovery_logs_collection.create_index([("session_id", 1), ("created_at", -1)])
+    await live_session_recovery_logs_collection.create_index("trainer_id")
+    await live_session_recovery_logs_collection.create_index("event_type")
     await feedback_collection.create_index("feedback_id", unique=True)
     await feedback_collection.create_index([("session_id", 1), ("student_id", 1)], unique=True)
     await feedback_collection.create_index("session_id")

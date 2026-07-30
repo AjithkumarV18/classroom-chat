@@ -9,6 +9,8 @@ function TrainerDashboard() {
   const [sessions, setSessions] = useState([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [notifyingSessionId, setNotifyingSessionId] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -62,20 +64,22 @@ function TrainerDashboard() {
     if (!session) return;
 
     try {
+      setNotifyingSessionId(sessionId);
+      setStatusMessage("");
       setErrorMessage("");
-      const updatedSession = await trainerSessionsApi.update(session.objectId, {
-        students_notified: true,
-      });
+      const notifyResult = await trainerSessionsApi.notify(session.objectId);
 
       setSessions((currentSessions) =>
         currentSessions.map((item) =>
-          item.id === sessionId ? mapTrainerSessionFromApi(updatedSession) : item
+          item.id === sessionId ? { ...item, studentsNotified: true } : item
         )
       );
 
-      alert(`Students notified for ${session.batchName}.`);
+      setStatusMessage(`Notification sent to ${notifyResult.recipient_count} students in ${session.batchName}.`);
     } catch (error) {
       setErrorMessage(error.message || "Unable to notify students.");
+    } finally {
+      setNotifyingSessionId("");
     }
   };
 
@@ -102,6 +106,7 @@ function TrainerDashboard() {
         </header>
 
         {errorMessage ? <p className="dashboard-error">{errorMessage}</p> : null}
+        {statusMessage ? <p className="dashboard-success">{statusMessage}</p> : null}
 
         <section className="dashboard-summary" aria-label="Session summary">
           <article>
@@ -152,14 +157,15 @@ function TrainerDashboard() {
 
                   <div className="session-card__actions">
                     {session.studentsNotified ? (
-                      <span className="notified-badge">? Students Notified</span>
+                      <span className="notified-badge">{"\u2713 Students Notified"}</span>
                     ) : (
                       <button
                         className="notify-button"
+                        disabled={notifyingSessionId === session.id}
                         onClick={() => handleNotifyStudents(session.id)}
                         type="button"
                       >
-                        Notify Students
+                        {notifyingSessionId === session.id ? "Sending..." : "Notify Students"}
                       </button>
                     )}
                     <button

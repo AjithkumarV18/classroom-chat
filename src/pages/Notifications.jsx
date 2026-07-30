@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAuthUser } from "../auth/auth";
-import { notificationsApi } from "../services/api";
+import { getAuthToken, getAuthUser } from "../auth/auth";
+import { API_ORIGIN, notificationsApi } from "../services/api";
 import "./Notifications.css";
 
 const initialFilters = {
@@ -23,8 +23,8 @@ const emptyForm = {
   notificationStatus: "Sent",
 };
 
-const priorities = ["Low", "Medium", "High"];
-const recipientTypes = ["All", "Batch", "User"];
+const priorities = ["Low", "Medium", "High", "Emergency"];
+const recipientTypes = ["All", "Batch", "LiveClassroom"];
 const statuses = ["Active", "Draft", "Sent"];
 
 function Notifications() {
@@ -32,6 +32,7 @@ function Notifications() {
   const userRole = authUser?.role || "";
   const canCreate = ["Teacher", "Admin"].includes(userRole);
   const canDelete = userRole === "Admin";
+  const canMarkRead = !canCreate;
   const [notifications, setNotifications] = useState([]);
   const [filters, setFilters] = useState(initialFilters);
   const [formValues, setFormValues] = useState(emptyForm);
@@ -46,6 +47,42 @@ function Notifications() {
   useEffect(() => {
     loadNotifications();
   }, [page]);
+
+  useEffect(() => {
+    const token = getAuthToken();
+    if (!token || !authUser?.id) return undefined;
+    let socket;
+    let reconnectTimer;
+    let stopped = false;
+
+    const connect = () => {
+      const origin = API_ORIGIN || window.location.origin;
+      const url = new URL("/api/notifications/ws", origin);
+      url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
+      url.searchParams.set("token", token);
+      url.searchParams.set("channel", `user_${authUser.id}`);
+      socket = new WebSocket(url);
+      socket.onmessage = (event) => {
+        try {
+          if (JSON.parse(event.data)?.type === "NEW_NOTIFICATION") {
+            loadNotifications();
+          }
+        } catch {
+          // Ignore malformed events; the next refresh still restores persisted data.
+        }
+      };
+      socket.onclose = () => {
+        if (!stopped) reconnectTimer = window.setTimeout(connect, 2000);
+      };
+    };
+
+    connect();
+    return () => {
+      stopped = true;
+      window.clearTimeout(reconnectTimer);
+      socket?.close();
+    };
+  }, [authUser?.id]);
 
   const stats = useMemo(() => {
     const unread = notifications.filter((item) => !item.readStatus).length;
@@ -131,11 +168,10 @@ function Notifications() {
     const payload = {
       title: formValues.title.trim(),
       message: formValues.message.trim(),
-      recipient_type: formValues.recipientType,
-      recipient_id: formValues.recipientType === "User" ? formValues.recipientId.trim() : null,
+      target_audience: formValues.recipientType,
+      session_id: formValues.recipientType === "LiveClassroom" ? formValues.recipientId.trim() : null,
       batch_id: formValues.recipientType === "Batch" ? formValues.batchId.trim() : null,
       priority: formValues.priority,
-      notification_status: formValues.notificationStatus,
     };
 
     try {
@@ -155,9 +191,14 @@ function Notifications() {
 
   const markAsRead = async (notification) => {
     try {
-      await notificationsApi.markRead(notification.id);
+      const updated = mapNotificationFromApi(
+        await notificationsApi.markRead(notification.notificationId || notification.id)
+      );
       setNotifications((current) =>
-        current.map((item) => item.id === notification.id ? { ...item, readStatus: true } : item)
+        current.map((item) => item.id === notification.id ? updated : item)
+      );
+      setSelectedNotification((current) =>
+        current?.id === notification.id ? updated : current
       );
       showToast("Notification marked as read.");
     } catch (error) {
@@ -292,7 +333,7 @@ function Notifications() {
                       <td>
                         <div className="notifications-actions">
                           <button onClick={() => setSelectedNotification(notification)} type="button">View</button>
-                          {!notification.readStatus ? <button onClick={() => markAsRead(notification)} type="button">Mark Read</button> : null}
+                          {canMarkRead && !notification.readStatus ? <button onClick={() => markAsRead(notification)} type="button">Mark Read</button> : null}
                           {canCreate ? <button onClick={() => openEditModal(notification)} type="button">Edit</button> : null}
                           {canDelete ? <button className="danger" onClick={() => deleteNotification(notification)} type="button">Delete</button> : null}
                         </div>
@@ -345,7 +386,7 @@ function NotificationModal({ editingNotification, formValues, onChange, onClose,
           <label><span>Notification Title</span><input name="title" onChange={onChange} value={formValues.title} /></label>
           <label className="wide"><span>Message</span><textarea name="message" onChange={onChange} rows="4" value={formValues.message} /></label>
           <label><span>Recipient Type</span><select name="recipientType" onChange={onChange} value={formValues.recipientType}>{recipientTypes.map((type) => <option key={type} value={type}>{type}</option>)}</select></label>
-          {formValues.recipientType === "User" ? <label><span>Select User / User ID</span><input name="recipientId" onChange={onChange} placeholder="Example: user object id or demo-student" value={formValues.recipientId} /></label> : null}
+          {formValues.recipientType === "LiveClassroom" ? <label><span>Session ID</span><input name="recipientId" onChange={onChange} placeholder="Example: SES-DEMO-LIVE-001" value={formValues.recipientId} /></label> : null}
           {formValues.recipientType === "Batch" ? <label><span>Select Batch / Batch ID</span><input name="batchId" onChange={onChange} placeholder="Example: Batch A" value={formValues.batchId} /></label> : null}
           <label><span>Priority</span><select name="priority" onChange={onChange} value={formValues.priority}>{priorities.map((priority) => <option key={priority} value={priority}>{priority}</option>)}</select></label>
           <label><span>Status</span><select name="notificationStatus" onChange={onChange} value={formValues.notificationStatus}>{statuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label>
@@ -393,12 +434,12 @@ function mapNotificationFromApi(item) {
     message: item.message,
     senderId: item.sender_id,
     senderRole: item.sender_role,
-    recipientType: item.recipient_type,
-    recipientId: item.recipient_id,
+    recipientType: item.target_audience || item.recipient_type,
+    recipientId: item.session_id || item.recipient_id,
     batchId: item.batch_id,
     priority: item.priority,
-    readStatus: item.read_status,
-    notificationStatus: item.notification_status,
+    readStatus: item.is_read ?? item.read_status,
+    notificationStatus: item.notification_status || (item.is_deleted ? "Deleted" : "Sent"),
     createdAtLabel: formatDateTime(item.created_at),
   };
 }
@@ -406,6 +447,7 @@ function mapNotificationFromApi(item) {
 function formatRecipient(notification) {
   if (notification.recipientType === "All") return "All platform users";
   if (notification.recipientType === "Batch") return notification.batchId || notification.recipientId || "Batch";
+  if (notification.recipientType === "LiveClassroom") return notification.recipientId || "Live classroom";
   return notification.recipientId || "User";
 }
 

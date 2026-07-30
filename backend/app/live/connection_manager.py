@@ -1,9 +1,22 @@
 from __future__ import annotations
 
 import json
+from datetime import date, datetime
 from typing import Any
 
+from bson import ObjectId
 from fastapi import WebSocket
+
+
+def encode_event(event: dict[str, Any]) -> str:
+    def default(value: Any) -> str:
+        if isinstance(value, ObjectId):
+            return str(value)
+        if isinstance(value, (date, datetime)):
+            return value.isoformat()
+        return str(value)
+
+    return json.dumps(event, default=default)
 
 
 class ConnectionManager:
@@ -29,10 +42,10 @@ class ConnectionManager:
     async def send_to_user(self, session_id: str, user_id: str, event: dict[str, Any]) -> None:
         ws = self._connections.get(session_id, {}).get(user_id)
         if ws:
-            await ws.send_text(json.dumps(event))
+            await ws.send_text(encode_event(event))
 
     async def broadcast(self, session_id: str, event: dict[str, Any], exclude_user_id: str | None = None) -> None:
-        payload = json.dumps(event)
+        payload = encode_event(event)
         for uid, ws in list(self._connections.get(session_id, {}).items()):
             if exclude_user_id and uid == exclude_user_id:
                 continue

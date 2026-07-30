@@ -8,11 +8,14 @@ from jose import JWTError, jwt
 from app.config import settings
 from app.database import (
     activity_logs_collection,
+    chat_messages_collection,
     live_participants_collection,
     live_session_state_collection,
+    live_session_recovery_logs_collection,
     managed_sessions_collection,
     trainer_sessions_collection,
     users_collection,
+    whiteboard_entries_collection,
 )
 
 ParticipantStatus = Literal["waiting", "active", "removed", "disconnected"]
@@ -36,6 +39,48 @@ async def session_exists(session_id: str) -> bool:
     return bool(await trainer_sessions_collection.find_one({"room_id": session_id}))
 
 
+async def can_join_session(session_id: str, user: dict) -> bool:
+    if is_trainer(user.get("role", "")):
+        return True
+    if user.get("role") != "Student":
+        return False
+
+    user_id = user.get("id", "")
+    user_query = {"_id": ObjectId(user_id)} if ObjectId.is_valid(user_id) else {"_id": user_id}
+    user_document = await users_collection.find_one(user_query)
+    if not user_document:
+        return False
+
+    batches = {
+        value
+        for value in (
+            user_document.get("batch_id"),
+            user_document.get("batch_name"),
+            user_document.get("batch"),
+        )
+        if value
+    }
+    if not batches:
+        return False
+
+    trainer_session = await trainer_sessions_collection.find_one({"room_id": session_id})
+    if trainer_session:
+        return (
+            trainer_session.get("batch_name") in batches
+            and bool(trainer_session.get("students_notified"))
+        )
+
+    managed_session = await managed_sessions_collection.find_one({"session_id": session_id})
+    managed_batch = (
+        managed_session.get("batch_id")
+        or managed_session.get("batch_name")
+        or managed_session.get("batch")
+        if managed_session
+        else None
+    )
+    return managed_batch in batches
+
+
 def decode_ws_token(token: str) -> dict:
     try:
         payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
@@ -56,6 +101,9 @@ async def get_or_create_session_state(session_id: str) -> dict:
         "allow_rejoin_after_removal": False,
         "started_at": None,
         "ended_at": None,
+        "recovery_status": "none",
+        "recovery_deadline": None,
+        "recovery_trainer_id": None,
         "created_at": now,
         "updated_at": now,
     }
@@ -73,6 +121,58 @@ async def log_activity(session_id: str, event_type: str, actor_id: str, actor_na
         "metadata": metadata or {},
         "timestamp": utc_now(),
     })
+
+
+async def log_recovery(session_id: str, event_type: str, trainer_id: str, metadata: dict | None = None) -> None:
+    await live_session_recovery_logs_collection.insert_one({
+        "log_id": f"REC-{str(ObjectId()).upper()}",
+        "session_id": session_id,
+        "event_type": event_type,
+        "trainer_id": trainer_id,
+        "metadata": metadata or {},
+        "created_at": utc_now(),
+    })
+
+
+async def session_restore_snapshot(session_id: str) -> dict[str, Any]:
+    chat_docs = await chat_messages_collection.find({"session_id": session_id}).sort("timestamp", 1).to_list(500)
+    whiteboard_docs = await whiteboard_entries_collection.find({"session_id": session_id}).sort("timestamp", 1).to_list(1000)
+    state = await get_or_create_session_state(session_id)
+    return {
+        "session_state": {
+            "session_id": state["session_id"],
+            "status": state.get("status", "idle"),
+            "locked": state.get("locked", False),
+            "started_at": state.get("started_at"),
+            "ended_at": state.get("ended_at"),
+            "recovery_status": state.get("recovery_status", "none"),
+            "recovery_deadline": state.get("recovery_deadline"),
+        },
+        "participants": await list_participants(session_id),
+        "chat_history": [
+            {
+                "message_id": str(doc.get("message_id")),
+                "sender_id": doc.get("sender_id"),
+                "sender_name": doc.get("sender_name"),
+                "message": doc.get("message"),
+                "message_type": doc.get("message_type", "Text"),
+                "timestamp": doc.get("timestamp"),
+            }
+            for doc in chat_docs
+        ],
+        "whiteboard_state": [
+            {
+                "whiteboard_id": str(doc.get("whiteboard_id")),
+                "user_id": doc.get("user_id"),
+                "drawing_data": doc.get("drawing_data"),
+                "tool_type": doc.get("tool_type"),
+                "color": doc.get("color"),
+                "stroke_width": doc.get("stroke_width"),
+                "timestamp": doc.get("timestamp"),
+            }
+            for doc in whiteboard_docs
+        ],
+    }
 
 
 async def get_user_display(user_id: str) -> dict[str, str]:

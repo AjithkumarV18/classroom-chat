@@ -1,8 +1,5 @@
-from pathlib import Path
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 
 from app.config import settings
 from app.database import create_indexes
@@ -31,11 +28,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-uploads_dir = Path(__file__).resolve().parents[1] / "uploads"
-uploads_dir.mkdir(exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
-
 
 @app.on_event("startup")
 async def on_startup() -> None:

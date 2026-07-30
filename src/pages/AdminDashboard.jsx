@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { notificationsApi } from "../services/api";
 import "./AdminDashboard.css";
@@ -44,23 +44,24 @@ const menuItems = [
 function AdminDashboard() {
   const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   useEffect(() => {
     loadNotificationPreview();
   }, []);
 
-  const unreadCount = useMemo(
-    () => notifications.filter((notification) => !notification.read_status).length,
-    [notifications]
-  );
-
   const loadNotificationPreview = async () => {
     try {
-      const response = await notificationsApi.my({ page: 1, page_size: 5 });
+      const [response, countResponse] = await Promise.all([
+        notificationsApi.my({ page: 1, page_size: 5 }),
+        notificationsApi.unreadCount(),
+      ]);
       setNotifications(response.items || []);
+      setUnreadCount(countResponse.unread_count || 0);
     } catch {
       setNotifications([]);
+      setUnreadCount(0);
     }
   };
 

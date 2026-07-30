@@ -96,6 +96,45 @@
 .vc-btn--success { border-color: #166534; background: #14532d; color: #bbf7d0; }
 .vc-btn--danger { border-color: #991b1b; background: #7f1d1d; color: #fecaca; }
 
+.vc-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.vc-recording-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding: 0 20px;
+  background: #171923;
+  border-bottom: 1px solid var(--vc-border);
+  color: var(--vc-muted);
+  font-size: 0.82rem;
+}
+
+.vc-recording-bar span {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #9ca3af;
+}
+
+.vc-recording-bar--recording span {
+  background: #ef4444;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.16);
+}
+
+.vc-recording-bar strong {
+  color: var(--vc-text);
+  text-transform: capitalize;
+}
+
+.vc-recording-bar em {
+  color: #fecaca;
+  font-style: normal;
+}
+
 /* ── Main body ── */
 .vc-body {
   display: flex;
@@ -178,6 +217,69 @@
 .vc-sidepanel__content--chat > * {
   flex: 1;
   min-height: 0;
+}
+
+.mini-whiteboard {
+  display: grid;
+  gap: 10px;
+}
+
+.mini-whiteboard__toolbar,
+.mini-whiteboard__actions,
+.mini-whiteboard__colors {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mini-whiteboard button,
+.mini-whiteboard select {
+  min-height: 30px;
+  border: 1px solid var(--vc-border);
+  border-radius: 6px;
+  padding: 0 10px;
+  background: var(--vc-surface-2);
+  color: var(--vc-text);
+  font: inherit;
+  font-size: 0.78rem;
+}
+
+.mini-whiteboard button.active {
+  border-color: var(--vc-primary);
+  background: rgba(79, 140, 255, 0.22);
+}
+
+.mini-whiteboard button:disabled,
+.mini-whiteboard select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.mini-whiteboard__colors button {
+  width: 26px;
+  min-height: 26px;
+  padding: 0;
+}
+
+.mini-whiteboard canvas {
+  width: 100%;
+  aspect-ratio: 31 / 21;
+  border: 1px solid var(--vc-border);
+  border-radius: 8px;
+  background: #ffffff;
+  touch-action: none;
+}
+
+.mini-whiteboard__actions {
+  justify-content: space-between;
+}
+
+.mini-whiteboard__actions span,
+.mini-whiteboard p {
+  margin: 0;
+  color: var(--vc-muted);
+  font-size: 0.78rem;
 }
 
 .vc-search {

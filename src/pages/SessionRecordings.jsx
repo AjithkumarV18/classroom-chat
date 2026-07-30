@@ -1,8 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { sessionRecordingsApi, toApiUrl } from "../services/api";
+import { getAuthUser } from "../auth/auth";
+import { recordingsApi, toApiUrl } from "../services/api";
 import "./SessionRecordings.css";
 
 function SessionRecordings() {
+  const authUser = getAuthUser();
+  const canManageRecordings = ["Teacher", "Admin"].includes(authUser?.role);
   const [recordings, setRecordings] = useState([]);
   const [playingRecording, setPlayingRecording] = useState(null);
   const [statusMessage, setStatusMessage] = useState("");
@@ -24,8 +27,9 @@ function SessionRecordings() {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      const response = await sessionRecordingsApi.list();
-      setRecordings(response.map(mapSessionRecordingFromApi));
+      const response = await recordingsApi.list();
+      const items = Array.isArray(response) ? response : response.items || [];
+      setRecordings(items.map(mapSessionRecordingFromApi));
     } catch (error) {
       setErrorMessage(error.message || "Unable to load session recordings.");
     } finally {
@@ -33,32 +37,50 @@ function SessionRecordings() {
     }
   };
 
-  const handlePlayRecording = (recording) => {
+  const handlePlayRecording = async (recording) => {
     if (!recording.videoUrl) {
       setErrorMessage("This recording does not have a playable video file. Upload it again with a video file.");
       return;
     }
 
-    setErrorMessage("");
-    setPlayingRecording(recording);
-    setStatusMessage(`Playing recording ${recording.id} for ${recording.sessionName}.`);
+    try {
+      setErrorMessage("");
+      const playback = await recordingsApi.playback(recording.id);
+      setPlayingRecording({ ...recording, videoUrl: playback.playback_url });
+      await recordingsApi.trackView(recording.id, { watch_duration_seconds: 0 });
+      setStatusMessage(`Playing recording ${recording.id} for ${recording.sessionName}.`);
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to start playback.");
+    }
   };
 
-  const handleDownloadRecording = (recording) => {
+  const handleDownloadRecording = async (recording) => {
     if (!recording.downloadUrl) {
       setErrorMessage("This recording does not have a downloadable video file. Upload it again with a video file.");
       return;
     }
 
-    setErrorMessage("");
-    setStatusMessage(`Downloading recording ${recording.id}.`);
-    window.location.href = toApiUrl(recording.downloadUrl);
+    try {
+      setErrorMessage("");
+      const blob = await recordingsApi.download(recording.id);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = downloadUrl;
+      anchor.download = recording.videoFileName;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(downloadUrl);
+      setStatusMessage(`Downloaded recording ${recording.id}.`);
+    } catch (error) {
+      setErrorMessage(error.message || "Unable to download recording.");
+    }
   };
 
   const handleDeleteRecording = async (recording) => {
     try {
       setErrorMessage("");
-      await sessionRecordingsApi.delete(recording.objectId);
+      await recordingsApi.delete(recording.id);
       setRecordings((currentRecordings) =>
         currentRecordings.filter((item) => item.objectId !== recording.objectId)
       );
@@ -80,7 +102,11 @@ function SessionRecordings() {
           <div>
             <p>Session Library</p>
             <h1>Session Recordings</h1>
-            <span>Play, download, or remove recorded classroom sessions.</span>
+            <span>
+              {canManageRecordings
+                ? "Play, download, or remove recorded classroom sessions."
+                : "Play or download recordings available to your batch."}
+            </span>
           </div>
         </header>
 
@@ -152,18 +178,21 @@ function SessionRecordings() {
                     </button>
                     <button
                       className="download-recording-button"
+                      disabled={!recording.downloadUrl}
                       onClick={() => handleDownloadRecording(recording)}
                       type="button"
                     >
                       Download
                     </button>
-                    <button
-                      className="delete-recording-button"
-                      onClick={() => handleDeleteRecording(recording)}
-                      type="button"
-                    >
-                      Delete
-                    </button>
+                    {canManageRecordings ? (
+                      <button
+                        className="delete-recording-button"
+                        onClick={() => handleDeleteRecording(recording)}
+                        type="button"
+                      >
+                        Delete
+                      </button>
+                    ) : null}
                   </div>
                 </article>
               ))
@@ -184,12 +213,12 @@ function mapSessionRecordingFromApi(recording) {
   return {
     objectId: recording.id,
     id: recording.recording_id,
-    sessionName: recording.session_name,
-    duration: recording.duration,
-    videoUrl: recording.video_url,
-    downloadUrl: recording.download_url,
-    videoFileName: recording.video_file_name,
-    uploadedAt: recording.uploaded_date,
+    sessionName: recording.session_name || recording.session_id,
+    duration: recording.duration || recording.recording_duration,
+    videoUrl: recording.video_url || recording.video_file_url,
+    downloadUrl: recording.download_enabled === false ? "" : (recording.download_url || recording.video_file_url || recording.video_url),
+    videoFileName: recording.video_file_name || recording.video_file_url?.split("/").pop() || "recording",
+    uploadedAt: recording.uploaded_date || recording.recording_date || recording.created_at,
   };
 }
 

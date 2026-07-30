@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60
     frontend_origin: str = "http://localhost:5173"
     reset_code_expire_minutes: int = 15
+    live_session_recovery_timeout_seconds: int = 120
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
