@@ -135,7 +135,7 @@ function VirtualClassroom() {
           <h1>{sessionId}</h1>
           <p className={`vc-status ${live.connected ? "vc-status--live" : ""}`}>
             <span className="vc-status__dot" aria-hidden="true" />
-            {live.connected ? "Connected" : "Connecting..."} - {live.activeCount} in session
+            {live.connectionError ? "Unable to join" : live.connected ? "Connected" : "Connecting..."} - {live.activeCount} in session
           </p>
           {live.connectionError ? <p className="vc-error">{live.connectionError}</p> : null}
         </div>
@@ -180,7 +180,9 @@ function VirtualClassroom() {
 
       <div className={`vc-body ${panelOpen ? "vc-body--panel-open" : ""}`}>
         <section className="vc-stage" aria-label="Video meeting">
-          <JitsiVideoRoom sessionId={sessionId} displayName={displayName} email={authUser?.email} />
+          {!live.connectionError ? (
+            <JitsiVideoRoom sessionId={sessionId} displayName={displayName} email={authUser?.email} />
+          ) : null}
         </section>
 
         {panelOpen && (
